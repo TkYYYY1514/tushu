@@ -145,7 +145,7 @@
                 <p class='text-white/80 text-xs'>可续借</p>
             </div>
         </div>
-        <button id='logoutBtn' class='w-full mt-4 bg-white/20 hover:bg-white/30 text-white rounded-lg py-2.5 text-center text-sm font-medium transition-colors'>
+        <button id='logoutBtn' class='w-full mt-4 bg-white/20 hover:bg-white/30 text-white rounded-lg py-2.5 text-center text-sm font-medium transition-colors btn-hover'>
             <i class='fas fa-sign-out-alt mr-1.5'></i>
             退出登录
         </button>
@@ -164,30 +164,7 @@
             </div>
         </div>
 
-        <!-- 借阅统计图表（简化版） -->
-        <div class='bg-white rounded-xl p-4 shadow-sm mb-6'>
-            <h3 class='text-base font-medium mb-3'>借阅分布</h3>
-            <div class='flex space-x-2'>
-                <div class='flex-1 bg-primary/10 rounded-lg p-2'>
-                    <div class='h-24 bg-primary/5 rounded-md relative'>
-                        <div class='absolute bottom-0 left-0 right-0 h-3/4 bg-primary rounded-md transition-all duration-1000 ease-out' style='transition-delay: 0.2s'></div>
-                    </div>
-                    <p class='text-xs text-center text-gray-600 mt-1'>文学艺术</p>
-                </div>
-                <div class='flex-1 bg-primary/10 rounded-lg p-2'>
-                    <div class='h-24 bg-primary/5 rounded-md relative'>
-                        <div class='absolute bottom-0 left-0 right-0 h-1/2 bg-primary rounded-md transition-all duration-1000 ease-out' style='transition-delay: 0.4s'></div>
-                    </div>
-                    <p class='text-xs text-center text-gray-600 mt-1'>科学技术</p>
-                </div>
-                <div class='flex-1 bg-primary/10 rounded-lg p-2'>
-                    <div class='h-24 bg-primary/5 rounded-md relative'>
-                        <div class='absolute bottom-0 left-0 right-0 h-1/3 bg-primary rounded-md transition-all duration-1000 ease-out' style='transition-delay: 0.6s'></div>
-                    </div>
-                    <p class='text-xs text-center text-gray-600 mt-1'>生活休闲</p>
-                </div>
-            </div>
-        </div>
+        <!-- 借阅统计图表已移除 -->
 
         <!-- 筛选和排序 -->
         <div class='flex justify-between items-center mb-4'>
@@ -292,6 +269,53 @@
 
     <!-- 引入存储管理模块 -->
     <script src='utils/storage.js'></script>
+    
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置按钮点击事件
+            const settingsBtn = document.getElementById('settingsBtn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    // 显示提示，因为设置功能可能尚未实现
+                    alert('设置功能即将上线，敬请期待！');
+                });
+            }
+            
+            // 退出登录按钮点击事件
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn && StorageManager) {
+                logoutBtn.addEventListener('click', function() {
+                    // 显示确认对话框
+                    if (confirm('确定要退出登录吗？')) {
+                        // 清除用户信息
+                        localStorage.removeItem(StorageManager.KEYS.USER_INFO);
+                        localStorage.removeItem(StorageManager.KEYS.LOGIN_STATUS);
+                        localStorage.removeItem(StorageManager.KEYS.USER_TYPE);
+                        
+                        // 跳转到登录页面
+                        window.location.href = 'login.html';
+                    }
+                });
+            }
+            
+            // 筛选按钮点击事件
+            const filterBtn = document.getElementById('filterBtn');
+            if (filterBtn) {
+                filterBtn.addEventListener('click', function() {
+                    alert('筛选功能即将上线，敬请期待！');
+                });
+            }
+            
+            // 排序按钮点击事件
+            const sortBtn = document.getElementById('sortBtn');
+            if (sortBtn) {
+                sortBtn.addEventListener('click', function() {
+                    alert('排序功能即将上线，敬请期待！');
+                });
+            }
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -622,7 +646,7 @@
 
                 // 去借阅按钮
                 document.getElementById('goBorrowBtn').addEventListener('click', function() {
-                    window.location.href = 'borrow.html';
+                    window.location.href = 'bookshelf.html';
                 });
 
                 // 筛选按钮
@@ -696,44 +720,7 @@
         });
     </script>
     
-    <!-- 底部导航栏 -->
-    <footer class='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 px-2 py-1'>
-        <div class='flex justify-around items-center'>
-            <a href='index.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-book text-lg mb-1'></i>
-                <span class='text-xs'>图书</span>
-            </a>
-            <a href='borrow.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-hand-holding text-lg mb-1'></i>
-                <span class='text-xs'>借阅</span>
-            </a>
-            <a href='return.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-undo-alt text-lg mb-1'></i>
-                <span class='text-xs'>归还</span>
-            </a>
-            <a href='my-borrows.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-active'>
-                <i class='fas fa-user text-lg mb-1'></i>
-                <span class='text-xs'>我的</span>
-            </a>
-        </div>
-    </footer>
-
-    <script>
-        // 导航栏点击效果
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                // 防止重复点击当前页面
-                if (this.classList.contains('nav-item-active')) {
-                    return;
-                }
-                
-                // 添加点击动画
-                this.classList.add('transform', 'scale-110', 'transition-transform', 'duration-200');
-                setTimeout(() => {
-                    this.classList.remove('transform', 'scale-110');
-                }, 200);
-            });
-        });
-    </script>
+    <!-- 底部导航栏组件 -->
+    <script src='components/load-components.js'></script>
 </body>
 </html>

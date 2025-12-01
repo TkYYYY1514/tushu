@@ -66,12 +66,10 @@ function setNavBarActive(targetPage) {
 // 自动检测当前页面并设置激活状态
 function autoSetActiveNav() {
     const currentUrl = window.location.pathname;
-    if (currentUrl.includes('books.html')) {
+    if (currentUrl.includes('books.html') || currentUrl.includes('book-detail.html')) {
         setNavBarActive('books');
-    } else if (currentUrl.includes('borrow.html')) {
-        setNavBarActive('borrow');
-    } else if (currentUrl.includes('return.html')) {
-        setNavBarActive('return');
+    } else if (currentUrl.includes('bookshelf.html')) {
+        setNavBarActive('bookshelf');
     } else if (currentUrl.includes('my-borrows.html')) {
         setNavBarActive('my');
     }

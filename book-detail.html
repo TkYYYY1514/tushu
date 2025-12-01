@@ -351,11 +351,11 @@
 
             // 借阅按钮事件
             document.getElementById('borrowBtn').addEventListener('click', function() {
-                // 已移除登录检查，简化用户体验
-
                 // 检查图书是否已被当前用户借阅
                 if (StorageManager.isBookBorrowedByUser(bookId)) {
                     showToast('您已借阅过这本书', 'info');
+                    // 跳转到书架页面的借阅标签页
+                    window.location.href = 'bookshelf.html?tab=borrow';
                     return;
                 }
 
@@ -372,6 +372,11 @@
                     this.classList.remove('bg-primary');
                     this.classList.add('bg-gray-400');
                     this.disabled = true;
+                    
+                    // 延迟跳转到书架页面的借阅标签页
+                    setTimeout(() => {
+                        window.location.href = 'bookshelf.html?tab=borrow';
+                    }, 1500);
                 } else {
                     showToast('借阅失败，请稍后重试', 'error');
                 }
@@ -418,44 +423,7 @@
         });
     </script>
     
-    <!-- 底部导航栏 -->
-    <footer class='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 px-2 py-1'>
-        <div class='flex justify-around items-center'>
-            <a href='index.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-book text-lg mb-1'></i>
-                <span class='text-xs'>图书</span>
-            </a>
-            <a href='borrow.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-hand-holding text-lg mb-1'></i>
-                <span class='text-xs'>借阅</span>
-            </a>
-            <a href='return.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-undo-alt text-lg mb-1'></i>
-                <span class='text-xs'>归还</span>
-            </a>
-            <a href='my-borrows.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
-                <i class='fas fa-user text-lg mb-1'></i>
-                <span class='text-xs'>我的</span>
-            </a>
-        </div>
-    </footer>
-
-    <script>
-        // 导航栏点击效果
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                // 防止重复点击当前页面
-                if (this.classList.contains('nav-item-active')) {
-                    return;
-                }
-                
-                // 添加点击动画
-                this.classList.add('transform', 'scale-110', 'transition-transform', 'duration-200');
-                setTimeout(() => {
-                    this.classList.remove('transform', 'scale-110');
-                }, 200);
-            });
-        });
-    </script>
+    <!-- 底部导航栏组件 -->
+    <script src='components/load-components.js'></script>
 </body>
 </html>

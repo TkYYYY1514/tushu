@@ -219,6 +219,47 @@ const StorageManager = {
     },
 
     /**
+     * 移除借阅记录（兼容函数，用于还书功能）
+     * @param {number} bookId - 图书ID
+     * @returns {boolean} 移除是否成功
+     */
+    removeBorrowRecord(bookId) {
+        if (!this.isStorageAvailable()) return false;
+        
+        try {
+            const records = this.getBorrowRecords();
+            const userInfo = this.getUserInfo();
+            
+            if (!userInfo) {
+                console.error('用户未登录，无法移除借阅记录');
+                return false;
+            }
+            
+            // 查找当前用户的借阅记录
+            const recordIndex = records.findIndex(record => 
+                record.bookId === bookId && 
+                record.borrowerId === userInfo.account && 
+                record.status === 'borrowed'
+            );
+            
+            if (recordIndex === -1) {
+                console.error('未找到当前用户的借阅记录');
+                return false;
+            }
+            
+            // 更新借阅记录状态为已归还
+            records[recordIndex].status = 'returned';
+            records[recordIndex].returnDate = new Date().toISOString();
+            
+            localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(records));
+            return true;
+        } catch (e) {
+            console.error('移除借阅记录失败:', e);
+            return false;
+        }
+    },
+
+    /**
      * 获取用户当前借阅的图书
      * @returns {Array} 当前借阅的图书数组
      */

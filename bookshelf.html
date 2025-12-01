@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的书架 - 移动图书馆</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        secondary: '#10B981',
+                        accent: '#059669',
+                        light: '#ECFDF5',
+                        dark: '#1E293B'
+                    }
+                }
+            }
+        };
+    </script>
+    <style type='text/tailwindcss'>
+        @layer utilities {
+            .tab-active {
+                @apply bg-primary/10 text-primary border-primary;
+            }
+            .tab-inactive {
+                @apply bg-gray-100 text-gray-600 border-transparent;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light min-h-screen pb-20">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="px-4 py-3">
+            <h1 class="text-xl font-semibold text-gray-800">我的书架</h1>
+        </div>
+    </header>
+
+    <!-- 标签页导航 -->
+    <div class="bg-white border-b">
+        <div class="flex px-4">
+            <button class="tab-btn flex-1 py-3 text-center border-b-2 font-medium transition-all" 
+                    data-tab="borrowed" onclick="switchTab('borrowed')">
+                <i class="fas fa-book-open mr-2"></i>已借阅
+            </button>
+            <button class="tab-btn flex-1 py-3 text-center border-b-2 font-medium transition-all" 
+                    data-tab="favorites" onclick="switchTab('favorites')">
+                <i class="fas fa-heart mr-2"></i>收藏
+            </button>
+            <button class="tab-btn flex-1 py-3 text-center border-b-2 font-medium transition-all" 
+                    data-tab="return" onclick="switchTab('return')">
+                <i class="fas fa-undo mr-2"></i>待归还
+            </button>
+        </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <main class="p-4">
+        <!-- 已借阅图书 -->
+        <div id="borrowed-content" class="tab-content">
+            <div class="mb-4">
+                <input type="text" id="borrowed-search" placeholder="搜索已借阅图书..." 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            <div id="borrowed-list" class="space-y-3">
+                <!-- 借阅图书列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 收藏图书 -->
+        <div id="favorites-content" class="tab-content hidden">
+            <div class="mb-4">
+                <input type="text" id="favorites-search" placeholder="搜索收藏图书..." 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            <div id="favorites-list" class="space-y-3">
+                <!-- 收藏图书列表将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 待归还图书 -->
+        <div id="return-content" class="tab-content hidden">
+            <div class="mb-4">
+                <input type="text" id="return-search" placeholder="搜索待归还图书..." 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            <div id="return-list" class="space-y-3">
+                <!-- 待归还图书列表将在这里动态生成 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部导航栏组件 -->
+    <script src='components/load-components.js'></script>
+
+    <!-- 引入存储管理模块 -->
+    <script src="utils/storage.js"></script>
+
+    <script>
+        // 当前激活的标签页
+        let currentTab = 'borrowed';
+
+        // 获取URL参数
+        function getUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const params = {};
+            for (const [key, value] of urlParams) {
+                params[key] = value;
+            }
+            return params;
+        }
+
+        // 根据URL参数初始化标签页
+        function initializeTabFromUrl() {
+            const params = getUrlParams();
+            if (params.tab) {
+                const validTabs = ['borrowed', 'favorites', 'return'];
+                if (validTabs.includes(params.tab)) {
+                    switchTab(params.tab);
+                    return;
+                }
+            }
+            // 默认激活第一个标签页
+            switchTab('borrowed');
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 移除所有标签的激活状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('tab-inactive');
+            });
+            
+            // 显示选中的内容
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            
+            // 设置选中的标签为激活状态
+            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('tab-inactive');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab-active');
+            
+            currentTab = tabName;
+            
+            // 加载对应标签的数据
+            loadTabData(tabName);
+        }
+
+        // 加载标签页数据
+        function loadTabData(tabName) {
+            const listElement = document.getElementById(tabName + '-list');
+            
+            // 模拟数据加载
+            listElement.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-book text-4xl mb-4"></i>
+                    <p>正在加载${getTabDisplayName(tabName)}...</p>
+                </div>
+            `;
+            
+            // 模拟异步加载
+            setTimeout(() => {
+                const mockData = generateMockData(tabName);
+                renderBookList(listElement, mockData, tabName);
+            }, 500);
+        }
+
+        // 获取标签页显示名称
+        function getTabDisplayName(tabName) {
+            const names = {
+                'borrowed': '已借阅图书',
+                'favorites': '收藏图书',
+                'return': '待归还图书'
+            };
+            return names[tabName] || tabName;
+        }
+
+        // 生成模拟数据
+        function generateMockData(tabName) {
+            const books = [
+                {
+                    id: 1,
+                    title: 'JavaScript高级程序设计',
+                    author: 'Nicholas C. Zakas',
+                    cover: '📘',
+                    borrowDate: '2024-01-15',
+                    returnDate: '2024-02-15',
+                    status: 'borrowed'
+                },
+                {
+                    id: 2,
+                    title: '深入理解计算机系统',
+                    author: 'Randal E. Bryant',
+                    cover: '💻',
+                    borrowDate: '2024-01-10',
+                    returnDate: '2024-02-10',
+                    status: 'borrowed'
+                },
+                {
+                    id: 3,
+                    title: '设计模式',
+                    author: 'Erich Gamma',
+                    cover: '🎨',
+                    borrowDate: '2024-01-20',
+                    returnDate: '2024-02-20',
+                    status: 'return'
+                }
+            ];
+            
+            return books.filter(book => book.status === tabName || tabName === 'favorites');
+        }
+
+        // 渲染图书列表
+        function renderBookList(container, books, tabName) {
+            if (books.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>暂无${getTabDisplayName(tabName)}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = books.map(book => `
+                <div class="bg-white rounded-lg shadow-sm border p-4">
+                    <div class="flex items-center">
+                        <div class="text-4xl mr-4">${book.cover}</div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800">${book.title}</h3>
+                            <p class="text-sm text-gray-600">${book.author}</p>
+                            ${tabName !== 'favorites' ? `
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <span>借阅日期: ${book.borrowDate}</span>
+                                    <span class="mx-2">|</span>
+                                    <span>应还日期: ${book.returnDate}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <button class="ml-2 px-3 py-1 bg-blue-500 text-white rounded text-sm" 
+                                onclick="handleBookAction(${book.id}, '${tabName}')">
+                            ${getActionButtonText(tabName)}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取操作按钮文本
+        function getActionButtonText(tabName) {
+            const actions = {
+                'borrowed': '续借',
+                'favorites': '阅读',
+                'return': '归还'
+            };
+            return actions[tabName] || '操作';
+        }
+
+        // 处理图书操作
+        function handleBookAction(bookId, actionType) {
+            const actions = {
+                'borrowed': '续借',
+                'favorites': '阅读',
+                'return': '归还'
+            };
+            
+            alert(`执行${actions[actionType]}操作 - 图书ID: ${bookId}`);
+            // 这里可以添加实际的操作逻辑
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 根据URL参数初始化标签页
+            initializeTabFromUrl();
+            
+            // 添加搜索功能
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    // 搜索功能实现
+                    console.log('搜索:', this.value);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

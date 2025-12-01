@@ -1,15 +1,30 @@
 <div class='fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex items-center justify-around'>
+    <style>
+        /* 导航样式增强 */
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+        
+        /* 统一按钮悬停效果 */
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:active {
+            transform: scale(0.95);
+        }
+    </style>
     <a href='books.html' class='nav-item flex flex-col items-center justify-center text-primary' data-target='books'>
         <i class='fas fa-book text-lg'></i>
         <span class='text-xs mt-1'>图书</span>
     </a>
-    <a href='borrow.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='borrow'>
+    <a href='bookshelf.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='bookshelf'>
         <i class='fas fa-book-open text-lg'></i>
-        <span class='text-xs mt-1'>借阅</span>
-    </a>
-    <a href='return.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='return'>
-        <i class='fas fa-undo text-lg'></i>
-        <span class='text-xs mt-1'>归还</span>
+        <span class='text-xs mt-1'>书架</span>
     </a>
     <a href='my-borrows.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='my'>
         <i class='fas fa-user text-lg'></i>
@@ -35,15 +50,20 @@
     
     // 自动检测当前页面并设置激活状态
     function autoSetActiveNav() {
-        const currentUrl = window.location.pathname;
-        if (currentUrl.includes('books.html')) {
+        const currentUrl = window.location.href;
+        const currentPath = window.location.pathname;
+        const currentPage = currentPath.split('/').pop() || '';
+        
+        // 更精确的页面检测逻辑
+        if (currentPage === 'books.html' || currentUrl.includes('/books.html')) {
             setNavBarActive('books');
-        } else if (currentUrl.includes('borrow.html')) {
-            setNavBarActive('borrow');
-        } else if (currentUrl.includes('return.html')) {
-            setNavBarActive('return');
-        } else if (currentUrl.includes('my-borrows.html')) {
+        } else if (currentPage === 'bookshelf.html' || currentUrl.includes('/bookshelf.html')) {
+            setNavBarActive('bookshelf');
+        } else if (currentPage === 'my-borrows.html' || currentUrl.includes('/my-borrows.html')) {
             setNavBarActive('my');
+        } else if (currentPage === 'book-detail.html' || currentUrl.includes('/book-detail.html')) {
+            // 图书详情页属于图书模块
+            setNavBarActive('books');
         }
     }
     
