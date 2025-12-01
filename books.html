@@ -362,7 +362,7 @@
                 document.getElementById('welcomeText').textContent = `欢迎，${userAccount}`;
             }
 
-            // 分类选择
+            // 分类选择按钮事件
             const categoryBtns = document.querySelectorAll('.category-btn');
             categoryBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -375,11 +375,40 @@
                     this.classList.add('category-active');
                     this.classList.remove('bg-gray-100', 'text-gray-700');
                     
-                    // 这里可以添加加载对应分类图书的逻辑
-                    console.log('选择分类:', this.textContent.trim());
+                    // 更新当前分类
+                    currentCategory = this.textContent.trim();
+                    
+                    // 根据当前分类和搜索关键词过滤图书
+                    const keyword = searchInput.value.trim().toLowerCase();
+                    currentBooks = allBooks.filter(book => {
+                        const matchesCategory = currentCategory === '全部' || book.category === currentCategory;
+                        const matchesKeyword = !keyword || 
+                                             book.title.toLowerCase().includes(keyword) || 
+                                             book.author.toLowerCase().includes(keyword);
+                        return matchesCategory && matchesKeyword;
+                    });
+                    
+                    // 重新渲染图书列表
+                    renderBookList();
+                    console.log('选择分类:', currentCategory);
                 });
             });
 
+            // 图书数据数组 - 包含页面上所有显示的图书信息
+            const allBooks = [
+                { id: 1, title: '活着', author: '余华', rating: 9.4, stock: 23, status: 'available', imageId: 24, category: '文学艺术' },
+                { id: 2, title: '三体', author: '刘慈欣', rating: 9.2, stock: 18, status: 'available', imageId: 20, category: '科技' },
+                { id: 3, title: '解忧杂货店', author: '东野圭吾', rating: 8.9, stock: 25, status: 'available', imageId: 22, category: '文学艺术' },
+                { id: 4, title: '百年孤独', author: '加西亚·马尔克斯', rating: 9.3, stock: 5, status: 'borrowed', imageId: 28, category: '文学艺术' },
+                { id: 5, title: '人类简史', author: '尤瓦尔·赫拉利', rating: 9.1, stock: 12, status: 'available', imageId: 26, category: '社会科学' },
+                { id: 6, title: '小王子', author: '安托万·德·圣-埃克苏佩里', rating: 9.0, stock: 30, status: 'available', imageId: 29, category: '文学艺术' }
+            ];
+            
+            // 当前显示的图书（初始为全部）
+            let currentBooks = [...allBooks];
+            // 当前选中的分类
+            let currentCategory = '全部';
+            
             // 搜索功能
             const searchBtn = document.getElementById('searchBtn');
             const searchInput = document.getElementById('searchInput');
@@ -394,28 +423,149 @@
                 }
             });
             
+            // 为搜索框添加清除按钮功能
+            searchInput.addEventListener('input', function() {
+                if (!this.value.trim()) {
+                    // 如果搜索框为空，显示全部符合当前分类的图书
+                    currentBooks = allBooks.filter(book => 
+                        currentCategory === '全部' || book.category === currentCategory
+                    );
+                    renderBookList();
+                }
+            });
+            
             function performSearch() {
                 const keyword = searchInput.value.trim();
                 if (keyword) {
                     console.log('搜索关键词:', keyword);
-                    // 这里可以添加搜索逻辑
                     // 模拟搜索动画效果
                     searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                     setTimeout(() => {
                         searchBtn.innerHTML = '搜索';
-                        // 搜索完成后的逻辑
-                    }, 1000);
+                        executeSearch(keyword);
+                    }, 500);
                 }
             }
+            
+            // 执行搜索
+            function executeSearch(keyword) {
+                const searchLower = keyword.toLowerCase();
+                
+                // 根据关键词过滤图书
+                currentBooks = allBooks.filter(book => {
+                    const matchesKeyword = book.title.toLowerCase().includes(searchLower) || 
+                                          book.author.toLowerCase().includes(searchLower);
+                    const matchesCategory = currentCategory === '全部' || book.category === currentCategory;
+                    return matchesKeyword && matchesCategory;
+                });
+                
+                // 重新渲染图书列表
+                renderBookList();
+            }
+            
+            // 渲染图书列表
+            function renderBookList() {
+                const bookListContainer = document.querySelector('.grid.grid-cols-2');
+                
+                // 清空现有列表
+                bookListContainer.innerHTML = '';
+                
+                if (currentBooks.length === 0) {
+                    // 显示无结果提示
+                    bookListContainer.innerHTML = `
+                        <div class="col-span-2 py-12 text-center">
+                            <i class="fas fa-search text-gray-300 text-5xl mb-4"></i>
+                            <p class="text-gray-500">未找到匹配的图书</p>
+                            <button id="clearSearchBtn" class="mt-4 text-primary text-sm font-medium px-4 py-2 rounded-full border border-primary">
+                                清除搜索
+                            </button>
+                        </div>
+                    `;
+                    
+                    // 添加清除搜索按钮事件
+                    document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
+                } else {
+                    // 渲染搜索结果
+                    currentBooks.forEach((book, index) => {
+                        const statusClass = book.status === 'available' ? 'bg-primary/80' : 'bg-gray-500/80';
+                        const statusText = book.status === 'available' ? '可借阅' : '已借出';
+                        
+                        const bookItem = document.createElement('div');
+                        bookItem.className = 'book-item opacity-0 animate-fade-in';
+                        bookItem.style.animationDelay = `${(index % 6) * 0.1}s`;
+                        bookItem.innerHTML = `
+                            <div class="aspect-[2/3] bg-gray-100 rounded-lg overflow-hidden book-hover cursor-pointer">
+                                <img src="https://picsum.photos/id/${book.imageId}/300/450" alt="${book.title}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent py-2 px-3">
+                                    <span class="text-white text-xs px-2 py-0.5 ${statusClass} rounded-full">${statusText}</span>
+                                </div>
+                            </div>
+                            <h4 class="mt-2 text-sm font-medium line-clamp-1">${book.title}</h4>
+                            <p class="text-xs text-gray-500 line-clamp-1">${book.author}</p>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-primary text-xs font-medium">评分 ${book.rating}</span>
+                                <span class="text-gray-400 text-xs">馆藏 ${book.stock}</span>
+                            </div>
+                        `;
+                        
+                        // 添加点击事件
+                        bookItem.addEventListener('click', function() {
+                            window.location.href = `book-detail.html?id=${book.id}`;
+                        });
+                        
+                        bookListContainer.appendChild(bookItem);
+                    });
+                    
+                    // 显示动画
+                    setTimeout(() => {
+                        document.querySelectorAll('.book-item.animate-fade-in').forEach(el => {
+                            el.style.opacity = '1';
+                        });
+                    }, 50);
+                }
+            }
+            
+            // 清除搜索
+            function clearSearch() {
+                searchInput.value = '';
+                currentBooks = [...allBooks];
+                renderBookList();
+            }
 
-            // 排序按钮
+            // 排序按钮事件监听
             const sortBtn = document.getElementById('sortBtn');
-            let sortOptionsVisible = false;
+            let currentSort = 'default'; // 默认排序
             
             sortBtn.addEventListener('click', function() {
-                // 切换排序选项的显示/隐藏
-                console.log('切换排序选项');
-                // 这里可以添加排序选项的下拉菜单逻辑
+                // 切换排序方式
+                if (currentSort === 'default') {
+                    currentSort = 'rating';
+                    sortBtn.innerHTML = '<span>按评分排序</span><i class="fas fa-chevron-up ml-1 text-xs"></i>';
+                } else if (currentSort === 'rating') {
+                    currentSort = 'rating-desc';
+                    sortBtn.innerHTML = '<span>按评分排序</span><i class="fas fa-chevron-down ml-1 text-xs"></i>';
+                } else {
+                    currentSort = 'default';
+                    sortBtn.innerHTML = '<span>最新</span><i class="fas fa-chevron-down ml-1 text-xs"></i>';
+                }
+                
+                // 根据当前排序方式对图书进行排序
+                let sortedBooks = [...currentBooks];
+                
+                if (currentSort === 'rating') {
+                    // 按评分升序排序
+                    sortedBooks.sort((a, b) => a.rating - b.rating);
+                } else if (currentSort === 'rating-desc') {
+                    // 按评分降序排序
+                    sortedBooks.sort((a, b) => b.rating - a.rating);
+                }
+                
+                // 更新当前图书列表
+                currentBooks = sortedBooks;
+                
+                // 重新渲染图书列表
+                renderBookList();
+                console.log('排序方式切换:', currentSort);
             });
 
             // 加载更多按钮

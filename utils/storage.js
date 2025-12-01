@@ -233,6 +233,15 @@ const StorageManager = {
             record.status === 'borrowed'
         );
     },
+    
+    /**
+     * 获取用户当前借阅的图书（兼容函数）
+     * @returns {Array} 当前借阅的图书数组
+     */
+    getBorrowedBooks() {
+        // 调用现有的getCurrentBorrowedBooks函数以保持一致性
+        return this.getCurrentBorrowedBooks();
+    },
 
     /**
      * 缓存图书数据
