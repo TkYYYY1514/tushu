@@ -346,59 +346,81 @@ const StorageManager = {
      * 初始化模拟数据（仅在开发环境使用）
      */
     initMockData() {
-        // 检查是否已有数据
-        if (this.isLoggedIn() || this.getBorrowRecords().length > 0) {
-            return;
-        }
-        
-        // 模拟一些借阅记录
-        const mockRecords = [
-            {
-                id: 1001,
-                bookId: 1,
-                bookTitle: '活着',
-                bookAuthor: '余华',
-                bookCover: 'https://picsum.photos/id/24/300/450',
-                borrowerId: '20220001',
-                borrowerName: '张三',
-                borrowDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'borrowed',
-                returnDate: null
-            },
-            {
-                id: 1002,
-                bookId: 2,
-                bookTitle: '三体',
-                bookAuthor: '刘慈欣',
-                bookCover: 'https://picsum.photos/id/20/300/450',
-                borrowerId: '20220001',
-                borrowerName: '张三',
-                borrowDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                dueDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'borrowed',
-                returnDate: null
-            },
-            {
-                id: 1003,
-                bookId: 3,
-                bookTitle: '解忧杂货店',
-                bookAuthor: '东野圭吾',
-                bookCover: 'https://picsum.photos/id/22/300/450',
-                borrowerId: '20220001',
-                borrowerName: '张三',
-                borrowDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-                dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                status: 'returned',
-                returnDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-            }
-        ];
+        // 强制创建测试账号，确保用户能够登录
+        // 创建默认测试账号
+        const testUser = {
+            account: 'test123',
+            password: 'test123',
+            userType: 'student',
+            name: '测试用户',
+            email: 'test@example.com',
+            phone: '13800138000',
+            registerDate: new Date().toISOString()
+        };
         
         try {
-            localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(mockRecords));
-            console.log('模拟借阅数据初始化完成');
+            // 强制保存测试账号，覆盖可能存在的旧数据
+            this.saveUserInfo(testUser);
+            this.setUserType('student');
+            console.log('测试账号已创建/更新: 账号(test123), 密码(test123)');
+            
+            // 清除可能存在的旧登录状态
+            localStorage.setItem(this.KEYS.LOGIN_STATUS, 'false');
         } catch (e) {
-            console.error('初始化模拟数据失败:', e);
+            console.error('创建测试账号失败:', e);
+        }
+        
+        // 检查是否已有借阅记录，如果没有则创建模拟借阅记录
+        if (this.getBorrowRecords().length === 0) {
+            // 模拟一些借阅记录
+            const mockRecords = [
+                {
+                    id: 1001,
+                    bookId: 1,
+                    bookTitle: '活着',
+                    bookAuthor: '余华',
+                    bookCover: 'https://picsum.photos/id/24/300/450',
+                    borrowerId: 'test123',
+                    borrowerName: '测试用户',
+                    borrowDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+                    dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'borrowed',
+                    returnDate: null
+                },
+                {
+                    id: 1002,
+                    bookId: 2,
+                    bookTitle: '三体',
+                    bookAuthor: '刘慈欣',
+                    bookCover: 'https://picsum.photos/id/20/300/450',
+                    borrowerId: 'test123',
+                    borrowerName: '测试用户',
+                    borrowDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                    dueDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'borrowed',
+                    returnDate: null
+                },
+                {
+                    id: 1003,
+                    bookId: 3,
+                    bookTitle: '解忧杂货店',
+                    bookAuthor: '东野圭吾',
+                    bookCover: 'https://picsum.photos/id/22/300/450',
+                    borrowerId: 'test123',
+                    borrowerName: '测试用户',
+                    borrowDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+                    dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'returned',
+                    returnDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+            
+            try {
+                localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(mockRecords));
+                console.log('模拟借阅数据初始化完成');
+            } catch (e) {
+                console.error('初始化模拟数据失败:', e);
+            }
         }
     }
 };
