@@ -2,7 +2,7 @@
 <html lang='zh-CN'>
 <head>
     <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
     <title>我的借阅 - 雀语图书馆</title>
     <script src='https://cdn.tailwindcss.com'></script>
     <link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet' />
@@ -12,16 +12,12 @@
                 extend: {
                     colors: {
                         primary: '#34D399',
-                        // 清新绿色主色调
                         secondary: '#10B981',
-                        // 深一点的绿色
                         accent: '#059669',
-                        // 强调色
                         light: '#ECFDF5',
-                        // 浅色背景
-                        dark: '#1E293B', // 深色文字
-                        warning: '#FBBF24', // 警告色（逾期）
-                        danger: '#EF4444' // 危险色（严重逾期）
+                        dark: '#1E293B',
+                        warning: '#FBBF24',
+                        danger: '#EF4444'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif']
@@ -30,44 +26,29 @@
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'slide-up': 'slideUp 0.4s ease-out forwards',
                         'scale-in': 'scaleIn 0.3s ease-out forwards',
-                        'pulse-light': 'pulseLight 2s infinite'
+                        'pulse-light': 'pulseLight 2s infinite',
+                        'pulse-soft': 'pulseSoft 1.5s infinite'
                     },
                     keyframes: {
                         fadeIn: {
-                            '0%': {
-                                opacity: '0'
-                            },
-                            '100%': {
-                                opacity: '1'
-                            }
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
                         },
                         slideUp: {
-                            '0%': {
-                                transform: 'translateY(10px)',
-                                opacity: '0'
-                            },
-                            '100%': {
-                                transform: 'translateY(0)',
-                                opacity: '1'
-                            }
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
                         },
                         scaleIn: {
-                            '0%': {
-                                transform: 'scale(0.98)',
-                                opacity: '0'
-                            },
-                            '100%': {
-                                transform: 'scale(1)',
-                                opacity: '1'
-                            }
+                            '0%': { transform: 'scale(0.98)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
                         },
                         pulseLight: {
-                            '0%, 100%': {
-                                opacity: '1'
-                            },
-                            '50%': {
-                                opacity: '0.8'
-                            }
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.8' }
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                            '50%': { opacity: '0.9', transform: 'scale(0.98)' }
                         }
                     }
                 }
@@ -91,8 +72,14 @@
             .btn-hover {
                 @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300;
             }
+            .btn-active {
+                @apply transform -translate-y-0.5 shadow-lg transition-all duration-150;
+            }
             .book-item {
                 @apply bg-white rounded-xl p-4 shadow-sm mb-4 transition-all duration-300 hover:shadow-md;
+            }
+            .book-item-hover {
+                @apply hover:shadow-md transform hover:-translate-y-1 transition-all duration-300;
             }
             .overdue-warning {
                 @apply bg-warning/10 border-warning/30 text-warning;
@@ -105,6 +92,18 @@
             }
             .badge {
                 @apply px-2 py-1 rounded-full text-xs font-medium;
+            }
+            .tab-active {
+                @apply bg-primary text-white;
+            }
+            .tab-inactive {
+                @apply text-gray-600 hover:bg-gray-100;
+            }
+            .nav-item-active {
+                @apply text-primary;
+            }
+            .nav-item-inactive {
+                @apply text-gray-500;
             }
         }
     </style>
@@ -194,11 +193,11 @@
         <div class='flex justify-between items-center mb-4'>
             <h2 class='text-base font-medium'>借阅列表</h2>
             <div class='flex space-x-2'>
-                <button id='filterBtn' class='px-3 py-1.5 bg-white rounded-lg text-sm flex items-center text-gray-700 shadow-sm'>
+                <button id='filterBtn' class='px-3 py-1.5 bg-white rounded-lg text-sm flex items-center text-gray-700 shadow-sm btn-hover'>
                     <i class='fas fa-filter mr-1.5'></i>
                     筛选
                 </button>
-                <button id='sortBtn' class='px-3 py-1.5 bg-white rounded-lg text-sm flex items-center text-gray-700 shadow-sm'>
+                <button id='sortBtn' class='px-3 py-1.5 bg-white rounded-lg text-sm flex items-center text-gray-700 shadow-sm btn-hover'>
                     <i class='fas fa-sort mr-1.5'></i>
                     排序
                 </button>
@@ -207,16 +206,16 @@
 
         <!-- 借阅状态选项卡 -->
         <div class='flex bg-white rounded-xl p-1 mb-4 shadow-sm overflow-x-auto hide-scrollbar'>
-            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg bg-primary text-white' data-tab='all'>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-active' data-tab='all'>
                 全部
             </button>
-            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg text-gray-600' data-tab='normal'>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-inactive' data-tab='normal'>
                 正常
             </button>
-            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg text-gray-600' data-tab='overdue'>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-inactive' data-tab='overdue'>
                 逾期
             </button>
-            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg text-gray-600' data-tab='renewable'>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-inactive' data-tab='renewable'>
                 可续借
             </button>
         </div>
@@ -293,8 +292,6 @@
 
     <!-- 引入存储管理模块 -->
     <script src='utils/storage.js'></script>
-    <!-- 加载通用底部导航栏 -->
-    <script src='components/load-components.js'></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -484,21 +481,21 @@
                         const statusText = getStatusText(borrowInfo);
                         
                         const bookItem = document.createElement('div');
-                        bookItem.className = 'book-item animate-fade-in';
+                        bookItem.className = 'book-item animate-fade-in book-item-hover';
                         bookItem.setAttribute('data-id', book.id);
                         bookItem.innerHTML = `
                             <div class='flex space-x-4'>
-                                <div class='w-16 h-24 bg-gray-100 rounded-lg overflow-hidden shadow-sm flex-shrink-0'>
+                                <div class='w-16 h-24 bg-gray-100 rounded-lg overflow-hidden shadow-sm flex-shrink-0 transform hover:scale-105 transition-transform duration-300'>
                                     <img src='${book.cover}' alt='${book.title}' class='w-full h-full object-cover'>
                                 </div>
                                 <div class='flex-1 flex flex-col justify-between'>
                                     <div>
                                         <h3 class='text-base font-medium mb-1 truncate'>${book.title}</h3>
                                         <p class='text-gray-600 text-sm mb-1'>${book.author}</p>
-                                        <div class='flex items-center mb-1'>
-                                            <span class='text-xs px-2 py-1 rounded-full ${statusClass}'>${statusText}</span>
+                                        <div class='flex items-center mb-1 flex-wrap gap-1'>
+                                            <span class='text-xs px-2 py-1 rounded-full ${statusClass} ${borrowInfo.isOverdue ? 'animate-pulse-soft' : ''}'>${statusText}</span>
                                             ${book.renewCount > 0 ? 
-                                                `<span class='text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-2'>已续借</span>` : ''
+                                                `<span class='text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full'>已续借</span>` : ''
                                             }
                                         </div>
                                         <div class='flex flex-col text-xs text-gray-500'>
@@ -530,6 +527,12 @@
                 // 详情按钮事件
                 document.querySelectorAll('.detail-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
+                        // 添加点击动画
+                        this.classList.add('btn-active');
+                        setTimeout(() => {
+                            this.classList.remove('btn-active');
+                        }, 200);
+                        
                         const bookId = parseInt(this.getAttribute('data-id'));
                         window.location.href = `book-detail.html?id=${bookId}`;
                     });
@@ -538,6 +541,12 @@
                 // 续借按钮事件
                 document.querySelectorAll('.renew-btn:not(:disabled)').forEach(btn => {
                     btn.addEventListener('click', function() {
+                        // 添加点击动画
+                        this.classList.add('btn-active');
+                        setTimeout(() => {
+                            this.classList.remove('btn-active');
+                        }, 200);
+                        
                         const bookId = parseInt(this.getAttribute('data-id'));
                         showRenewModal(bookId);
                     });
@@ -577,11 +586,11 @@
                 // 更新选项卡样式
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     if (btn.getAttribute('data-tab') === tab) {
-                        btn.classList.remove('text-gray-600');
-                        btn.classList.add('bg-primary', 'text-white');
+                        btn.classList.remove('tab-inactive');
+                        btn.classList.add('tab-active');
                     } else {
-                        btn.classList.remove('bg-primary', 'text-white');
-                        btn.classList.add('text-gray-600');
+                        btn.classList.remove('tab-active');
+                        btn.classList.add('tab-inactive');
                     }
                 });
                 // 重新渲染列表
@@ -591,12 +600,13 @@
             // Toast提示函数
             function showToast(message, type = 'success') {
                 const toast = document.createElement('div');
-                toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : type === 'info' ? 'bg-blue-500' : 'bg-primary'} transition-opacity duration-300 z-50`;
+                toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-danger' : type === 'info' ? 'bg-blue-500' : 'bg-primary'} transition-all duration-300 z-50 shadow-lg animate-fade-in animate-slide-up`;
                 toast.textContent = message;
                 document.body.appendChild(toast);
                 
                 setTimeout(() => {
                     toast.style.opacity = '0';
+                    toast.style.transform = 'translate(-50%, -10px)';
                     setTimeout(() => {
                         document.body.removeChild(toast);
                     }, 300);
@@ -628,6 +638,12 @@
                 // 选项卡切换
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
+                        // 添加点击动画
+                        this.classList.add('transform', 'scale-95', 'transition-transform', 'duration-150');
+                        setTimeout(() => {
+                            this.classList.remove('transform', 'scale-95');
+                        }, 150);
+                        
                         const tab = this.getAttribute('data-tab');
                         switchTab(tab);
                     });
@@ -652,6 +668,8 @@
                 // 退出登录按钮
                 document.getElementById('logoutBtn').addEventListener('click', function() {
                     if (confirm('确定要退出登录吗？')) {
+                        // 添加点击动画效果
+                        this.classList.add('btn-active');
                         // 调用StorageManager的退出登录方法
                         StorageManager.logout();
                         // 显示退出成功提示
@@ -675,6 +693,46 @@
             }
 
             init();
+        });
+    </script>
+    
+    <!-- 底部导航栏 -->
+    <footer class='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 px-2 py-1'>
+        <div class='flex justify-around items-center'>
+            <a href='index.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-book text-lg mb-1'></i>
+                <span class='text-xs'>图书</span>
+            </a>
+            <a href='borrow.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-hand-holding text-lg mb-1'></i>
+                <span class='text-xs'>借阅</span>
+            </a>
+            <a href='return.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-undo-alt text-lg mb-1'></i>
+                <span class='text-xs'>归还</span>
+            </a>
+            <a href='my-borrows.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-active'>
+                <i class='fas fa-user text-lg mb-1'></i>
+                <span class='text-xs'>我的</span>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏点击效果
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // 防止重复点击当前页面
+                if (this.classList.contains('nav-item-active')) {
+                    return;
+                }
+                
+                // 添加点击动画
+                this.classList.add('transform', 'scale-110', 'transition-transform', 'duration-200');
+                setTimeout(() => {
+                    this.classList.remove('transform', 'scale-110');
+                }, 200);
+            });
         });
     </script>
 </body>

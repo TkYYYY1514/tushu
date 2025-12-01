@@ -12,14 +12,10 @@
                 extend: {
                     colors: {
                         primary: '#34D399',
-                        // 清新绿色主色调
                         secondary: '#10B981',
-                        // 深一点的绿色
                         accent: '#059669',
-                        // 强调色
                         light: '#ECFDF5',
-                        // 浅色背景
-                        dark: '#1E293B' // 深色文字
+                        dark: '#1E293B'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif']
@@ -27,36 +23,25 @@
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'slide-up': 'slideUp 0.4s ease-out forwards',
-                        'scale-in': 'scaleIn 0.3s ease-out forwards'
+                        'scale-in': 'scaleIn 0.3s ease-out forwards',
+                        'pulse-soft': 'pulseSoft 2s infinite'
                     },
                     keyframes: {
                         fadeIn: {
-                            '0%': {
-                                opacity: '0'
-                            },
-                            '100%': {
-                                opacity: '1'
-                            }
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
                         },
                         slideUp: {
-                            '0%': {
-                                transform: 'translateY(10px)',
-                                opacity: '0'
-                            },
-                            '100%': {
-                                transform: 'translateY(0)',
-                                opacity: '1'
-                            }
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
                         },
                         scaleIn: {
-                            '0%': {
-                                transform: 'scale(0.98)',
-                                opacity: '0'
-                            },
-                            '100%': {
-                                transform: 'scale(1)',
-                                opacity: '1'
-                            }
+                            '0%': { transform: 'scale(0.98)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.8' }
                         }
                     }
                 }
@@ -65,34 +50,22 @@
     </script>
     <style type='text/tailwindcss'>
         @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
-            .text-shadow {
-                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .bg-gradient-green {
-                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
-            }
-            .card-shadow {
-                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
-            }
-            .btn-hover {
-                @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300;
-            }
-            .book-item {
-                @apply bg-white rounded-xl p-4 shadow-sm mb-4 transition-all duration-300 hover:shadow-md;
-            }
-            .skeleton-loading {
-                @apply animate-pulse bg-gray-200 rounded;
-            }
+            .content-auto { content-visibility: auto; }
+            .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .bg-gradient-green { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
+            .card-shadow { box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06); }
+            .btn-hover { @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300; }
+            .book-item { @apply bg-white rounded-xl p-4 shadow-sm mb-4 transition-all duration-300 hover:shadow-md; }
+            .skeleton-loading { @apply animate-pulse bg-gray-200 rounded; }
+            .filter-btn-active { @apply bg-primary text-white; }
+            .filter-btn-inactive { @apply bg-gray-100 text-gray-600; }
         }
     </style>
 </head>
 <body class='bg-light min-h-screen pb-20'>
     <!-- 顶部导航栏 -->
-    <header class='sticky top-0 z-30 bg-white shadow-sm py-3 px-4 flex items-center'>
-        <button id='backBtn' class='w-10 h-10 flex items-center justify-center text-gray-700 rounded-full hover:bg-gray-100 transition-colors'>
+    <header class='sticky top-0 z-30 bg-white shadow-sm py-3 px-4 flex items-center transition-all duration-300'>
+        <button id='backBtn' class='w-10 h-10 flex items-center justify-center text-gray-700 rounded-full hover:bg-gray-100 transition-all duration-300'>
             <i class='fas fa-arrow-left'></i>
         </button>
         <h1 class='text-lg font-medium text-center flex-1'>图书借阅</h1>
@@ -102,33 +75,39 @@
     <!-- 主内容区 -->
     <main class='px-4 py-5'>
         <!-- 搜索栏 -->
-        <div class='relative mb-6'>
+        <div class='relative mb-6 transform transition-all duration-300 hover:scale-[1.01]'>
             <input 
                 type='text' 
                 id='searchInput' 
                 placeholder='搜索图书名称、作者或ISBN...' 
-                class='w-full bg-white rounded-full py-3 px-5 pr-12 text-sm border border-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
+                class='w-full bg-white rounded-full py-3 px-5 pr-12 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-300 shadow-sm'
             >
-            <i class='fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400'></i>
+            <i class='fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors duration-300 hover:text-primary'></i>
         </div>
 
-        <!-- 筛选条件 -->
-        <div class='bg-white rounded-xl p-4 mb-6 shadow-sm'>
+        <!-- 筛选条件卡片 -->
+        <div class='bg-white rounded-xl p-4 mb-6 shadow-sm transform transition-all duration-300 hover:shadow-md'>
             <div class='flex justify-between items-center mb-4'>
-                <h2 class='text-base font-medium'>筛选条件</h2>
-                <button id='resetFilterBtn' class='text-primary text-sm'>重置</button>
+                <h2 class='text-base font-medium text-dark flex items-center'>
+                    <i class='fas fa-filter text-primary mr-2'></i>
+                    筛选条件
+                </h2>
+                <button id='resetFilterBtn' class='text-primary text-sm hover:text-secondary transition-colors duration-300 flex items-center'>
+                    <i class='fas fa-redo-alt mr-1 text-xs'></i>
+                    重置
+                </button>
             </div>
             
             <!-- 分类筛选 -->
             <div class='mb-4'>
                 <h3 class='text-sm text-gray-600 mb-2'>分类</h3>
                 <div class='flex flex-wrap gap-2'>
-                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-primary text-white' data-category='all'>全部</button>
-                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='literature'>文学艺术</button>
-                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='science'>科学技术</button>
-                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='history'>历史地理</button>
-                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='biography'>人物传记</button>
-                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='sci-fi'>科幻小说</button>
+                    <button class='category-filter px-3 py-1.5 rounded-full text-xs filter-btn-active transition-all duration-300' data-category='all'>全部</button>
+                    <button class='category-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-category='literature'>文学艺术</button>
+                    <button class='category-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-category='science'>科学技术</button>
+                    <button class='category-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-category='history'>历史地理</button>
+                    <button class='category-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-category='biography'>人物传记</button>
+                    <button class='category-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-category='sci-fi'>科幻小说</button>
                 </div>
             </div>
 
@@ -136,44 +115,82 @@
             <div>
                 <h3 class='text-sm text-gray-600 mb-2'>排序方式</h3>
                 <div class='flex flex-wrap gap-2'>
-                    <button class='sort-filter px-3 py-1 rounded-full text-xs bg-primary text-white' data-sort='newest'>最新上架</button>
-                    <button class='sort-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-sort='rating'>评分最高</button>
-                    <button class='sort-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-sort='stock'>库存最多</button>
+                    <button class='sort-filter px-3 py-1.5 rounded-full text-xs filter-btn-active transition-all duration-300' data-sort='newest'>最新上架</button>
+                    <button class='sort-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-sort='rating'>评分最高</button>
+                    <button class='sort-filter px-3 py-1.5 rounded-full text-xs filter-btn-inactive transition-all duration-300' data-sort='stock'>库存最多</button>
                 </div>
             </div>
         </div>
 
         <!-- 借阅规则说明 -->
-        <div class='bg-primary/5 rounded-xl p-4 mb-6 border border-primary/20'>
+        <div class='bg-primary/5 rounded-xl p-4 mb-6 border border-primary/20 transform transition-all duration-300 hover:shadow-sm'>
             <h3 class='text-sm font-medium text-primary mb-2 flex items-center'>
                 <i class='fas fa-info-circle mr-2'></i>
                 借阅规则
             </h3>
-            <ul class='text-xs text-gray-600 space-y-1'>
-                <li>• 学生用户最多可同时借阅5本图书，教职工用户最多可同时借阅8本图书</li>
-                <li>• 借阅期限为30天，可续借一次，续期15天</li>
-                <li>• 逾期未还将收取0.5元/天/本的罚款</li>
-                <li>• 图书归还时请确保完好无损，如有损坏将按原价赔偿</li>
+            <ul class='text-xs text-gray-600 space-y-1.5'>
+                <li class='flex items-start'><i class='fas fa-check-circle text-primary mt-0.5 mr-2 text-xs'></i><span>学生用户最多可同时借阅5本图书，教职工用户最多可同时借阅8本图书</span></li>
+                <li class='flex items-start'><i class='fas fa-check-circle text-primary mt-0.5 mr-2 text-xs'></i><span>借阅期限为30天，可续借一次，续期15天</span></li>
+                <li class='flex items-start'><i class='fas fa-check-circle text-primary mt-0.5 mr-2 text-xs'></i><span>逾期未还将收取0.5元/天/本的罚款</span></li>
+                <li class='flex items-start'><i class='fas fa-check-circle text-primary mt-0.5 mr-2 text-xs'></i><span>图书归还时请确保完好无损，如有损坏将按原价赔偿</span></li>
             </ul>
         </div>
 
         <!-- 图书列表 -->
         <div class='mb-8'>
-            <h2 class='text-base font-medium mb-4'>可借阅图书</h2>
+            <div class='flex justify-between items-center mb-4'>
+                <h2 class='text-base font-medium text-dark'>可借阅图书</h2>
+                <span id='bookCount' class='text-sm text-gray-500'>共 0 本</span>
+            </div>
+            
+            <!-- 结果统计 -->
+            <div id='resultInfo' class='text-xs text-gray-500 mb-3 hidden'>
+                显示筛选结果 <span id='resultStart'>1</span>-<span id='resultEnd'>8</span> 项，共 <span id='resultTotal'>8</span> 项
+            </div>
+            
             <div id='bookList' class='space-y-4'>
-                <!-- 图书项将通过JavaScript动态生成 -->
                 <!-- 加载状态 -->
-                <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
-                <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
-                <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                <div class='skeleton-loading h-28 rounded-xl mb-4'></div>
+                <div class='skeleton-loading h-28 rounded-xl mb-4'></div>
+                <div class='skeleton-loading h-28 rounded-xl mb-4'></div>
+            </div>
+            
+            <!-- 空状态 -->
+            <div id='emptyState' class='hidden text-center py-14'>
+                <div class='w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center'>
+                    <i class='fas fa-book-open text-gray-300 text-4xl'></i>
+                </div>
+                <h3 class='text-base font-medium text-gray-700 mb-2'>未找到图书</h3>
+                <p class='text-sm text-gray-500 mb-6'>没有找到符合当前筛选条件的图书</p>
+                <button id='clearFiltersBtn' class='px-6 py-2 bg-primary text-white rounded-full text-sm font-medium transition-all duration-300 hover:bg-secondary'>
+                    清除筛选条件
+                </button>
             </div>
         </div>
     </main>
 
+    <!-- 底部导航栏 -->
+    <div class='fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex items-center justify-around'>
+        <a href='books.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='books'>
+            <i class='fas fa-book text-lg'></i>
+            <span class='text-xs mt-1'>图书</span>
+        </a>
+        <a href='borrow.html' class='nav-item flex flex-col items-center justify-center text-primary' data-target='borrow'>
+            <i class='fas fa-book-open text-lg'></i>
+            <span class='text-xs mt-1'>借阅</span>
+        </a>
+        <a href='return.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='return'>
+            <i class='fas fa-undo text-lg'></i>
+            <span class='text-xs mt-1'>归还</span>
+        </a>
+        <a href='my-borrows.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='my'>
+            <i class='fas fa-user text-lg'></i>
+            <span class='text-xs mt-1'>我的</span>
+        </a>
+    </div>
+
     <!-- 引入存储管理模块 -->
     <script src='utils/storage.js'></script>
-    <!-- 加载通用底部导航栏 -->
-    <script src='components/load-components.js'></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -276,6 +293,18 @@
                 sort: 'newest'
             };
 
+            // 获取分类显示名称
+            function getCategoryName(category) {
+                const categoryMap = {
+                    'literature': '文学艺术',
+                    'science': '科学技术',
+                    'history': '历史地理',
+                    'biography': '人物传记',
+                    'sci-fi': '科幻小说'
+                };
+                return categoryMap[category] || '其他';
+            }
+
             // 过滤和排序图书
             function filterAndSortBooks(books) {
                 let filtered = [...books];
@@ -315,54 +344,80 @@
             // 渲染图书列表
             function renderBookList(books) {
                 const bookListElement = document.getElementById('bookList');
+                const emptyStateElement = document.getElementById('emptyState');
+                const resultInfoElement = document.getElementById('resultInfo');
+                
+                // 更新图书计数
+                document.getElementById('bookCount').textContent = `共 ${books.length} 本`;
+                
+                // 显示/隐藏结果信息
+                if (books.length > 0) {
+                    resultInfoElement.classList.remove('hidden');
+                    document.getElementById('resultStart').textContent = books.length > 0 ? '1' : '0';
+                    document.getElementById('resultEnd').textContent = Math.min(books.length, 100);
+                    document.getElementById('resultTotal').textContent = books.length;
+                } else {
+                    resultInfoElement.classList.add('hidden');
+                }
+                
+                // 清空并重新渲染列表
                 bookListElement.innerHTML = '';
                 
                 if (books.length === 0) {
-                    bookListElement.innerHTML = `
-                        <div class='text-center py-10'>
-                            <i class='fas fa-book-open text-gray-300 text-5xl mb-4'></i>
-                            <p class='text-gray-500'>没有找到符合条件的图书</p>
-                        </div>
-                    `;
+                    bookListElement.classList.add('hidden');
+                    emptyStateElement.classList.remove('hidden');
                     return;
                 }
                 
-                books.forEach(book => {
-                    // 直接检查图书借阅状态，不再需要登录检查
-                    const isBorrowed = StorageManager.isBookBorrowedByUser(book.id);
+                bookListElement.classList.remove('hidden');
+                emptyStateElement.classList.add('hidden');
+                
+                books.forEach((book, index) => {
+                    // 检查图书借阅状态
+                    const isBorrowed = StorageManager && StorageManager.isBookBorrowedByUser ? 
+                                      StorageManager.isBookBorrowedByUser(book.id) : false;
+                    
                     const bookItem = document.createElement('div');
-                    bookItem.className = 'book-item animate-fade-in';
+                    bookItem.className = 'book-item animate-slide-up';
+                    bookItem.style.animationDelay = `${index * 50}ms`;
+                    
                     bookItem.innerHTML = `
                         <div class='flex space-x-4'>
-                            <div class='w-16 h-24 bg-gray-100 rounded-lg overflow-hidden shadow-sm flex-shrink-0'>
+                            <div class='w-16 h-24 bg-gray-100 rounded-lg overflow-hidden shadow-sm flex-shrink-0 transform transition-transform duration-300 hover:scale-[1.02]'>
                                 <img src='${book.cover}' alt='${book.title}' class='w-full h-full object-cover'>
                             </div>
                             <div class='flex-1 flex flex-col justify-between'>
                                 <div>
-                                    <h3 class='text-base font-medium mb-1 truncate'>${book.title}</h3>
+                                    <h3 class='text-base font-medium mb-1 line-clamp-1'>${book.title}</h3>
                                     <p class='text-gray-600 text-sm mb-1'>${book.author}</p>
                                     <div class='flex items-center mb-1'>
-                                        <span class='text-primary text-sm mr-4'>评分 ${book.rating}</span>
-                                        <span class='text-gray-500 text-xs'>库存 ${book.stock}</span>
+                                        <div class='flex items-center mr-4'>
+                                            <i class='fas fa-star text-yellow-400 text-xs mr-1'></i>
+                                            <span class='text-primary text-sm'>${book.rating}</span>
+                                        </div>
+                                        <div class='flex items-center'>
+                                            <i class='fas fa-box text-gray-400 text-xs mr-1'></i>
+                                            <span class='text-gray-500 text-xs'>库存 ${book.stock}</span>
+                                        </div>
                                     </div>
                                     <div class='flex items-center'>
-                                        <span class='text-gray-500 text-xs'>${book.category === 'literature' ? '文学艺术' : 
-                                                                          book.category === 'science' ? '科学技术' : 
-                                                                          book.category === 'history' ? '历史地理' : 
-                                                                          book.category === 'biography' ? '人物传记' : '科幻小说'}</span>
+                                        <span class='px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full'>
+                                            ${getCategoryName(book.category)}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class='flex space-x-2 mt-2'>
-                                    <button class='details-btn flex-1 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium text-center' data-id='${book.id}'>
+                                    <button class='details-btn flex-1 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium text-center transition-all duration-300 hover:bg-gray-200' data-id='${book.id}'>
                                         查看详情
                                     </button>
-                                    <button class='borrow-btn py-1.5 ${isBorrowed ? 'bg-gray-400' : 'bg-primary'} text-white rounded-lg text-sm font-medium text-center' data-id='${book.id}' ${isBorrowed ? 'disabled' : ''}>
+                                    <button class='borrow-btn py-1.5 ${isBorrowed ? 'bg-gray-400' : 'bg-primary'} text-white rounded-lg text-sm font-medium text-center transition-all duration-300 hover:${isBorrowed ? 'bg-gray-500' : 'bg-secondary'} btn-hover' data-id='${book.id}' ${isBorrowed ? 'disabled' : ''}>
                                         ${isBorrowed ? '已借阅' : '借阅'}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     `;
+                    
                     bookListElement.appendChild(bookItem);
                 });
                 
@@ -376,7 +431,12 @@
                 document.querySelectorAll('.details-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const bookId = this.getAttribute('data-id');
-                        window.location.href = `book-detail.html?id=${bookId}`;
+                        // 添加点击动画
+                        this.classList.add('scale-95');
+                        setTimeout(() => {
+                            this.classList.remove('scale-95');
+                            window.location.href = `book-detail.html?id=${bookId}`;
+                        }, 100);
                     });
                 });
                 
@@ -384,7 +444,12 @@
                 document.querySelectorAll('.borrow-btn:not(:disabled)').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const bookId = parseInt(this.getAttribute('data-id'));
-                        handleBorrowBook(bookId);
+                        // 添加点击动画
+                        this.classList.add('scale-95');
+                        setTimeout(() => {
+                            this.classList.remove('scale-95');
+                            handleBorrowBook(bookId);
+                        }, 100);
                     });
                 });
             }
@@ -423,24 +488,27 @@
                     return;
                 }
 
-                // 添加借阅记录
-                if (StorageManager.addBorrowRecord({
-                    id: book.id,
-                    title: book.title,
-                    author: book.author,
-                    cover: book.cover
-                })) {
-                    showToast('借阅成功！');
-                    // 更新按钮状态
-                    const borrowBtn = document.querySelector(`.borrow-btn[data-id='${bookId}']`);
-                    if (borrowBtn) {
-                        borrowBtn.textContent = '已借阅';
-                        borrowBtn.classList.remove('bg-primary');
-                        borrowBtn.classList.add('bg-gray-400');
-                        borrowBtn.disabled = true;
+                // 显示借阅确认对话框
+                if (confirm(`确定要借阅《${book.title}》吗？`)) {
+                    // 添加借阅记录
+                    if (StorageManager.addBorrowRecord({
+                        id: book.id,
+                        title: book.title,
+                        author: book.author,
+                        cover: book.cover
+                    })) {
+                        showToast('借阅成功！');
+                        // 更新按钮状态
+                        const borrowBtn = document.querySelector(`.borrow-btn[data-id='${bookId}']`);
+                        if (borrowBtn) {
+                            borrowBtn.textContent = '已借阅';
+                            borrowBtn.classList.remove('bg-primary', 'hover:bg-secondary');
+                            borrowBtn.classList.add('bg-gray-400', 'hover:bg-gray-500');
+                            borrowBtn.disabled = true;
+                        }
+                    } else {
+                        showToast('借阅失败，请稍后重试', 'error');
                     }
-                } else {
-                    showToast('借阅失败，请稍后重试', 'error');
                 }
             }
 
@@ -450,11 +518,11 @@
                 document.querySelectorAll('.category-filter').forEach(btn => {
                     btn.addEventListener('click', function() {
                         document.querySelectorAll('.category-filter').forEach(b => {
-                            b.classList.remove('bg-primary', 'text-white');
-                            b.classList.add('bg-gray-100', 'text-gray-600');
+                            b.classList.remove('filter-btn-active');
+                            b.classList.add('filter-btn-inactive');
                         });
-                        this.classList.remove('bg-gray-100', 'text-gray-600');
-                        this.classList.add('bg-primary', 'text-white');
+                        this.classList.remove('filter-btn-inactive');
+                        this.classList.add('filter-btn-active');
                         currentFilters.category = this.getAttribute('data-category');
                         updateBookList();
                     });
@@ -464,11 +532,11 @@
                 document.querySelectorAll('.sort-filter').forEach(btn => {
                     btn.addEventListener('click', function() {
                         document.querySelectorAll('.sort-filter').forEach(b => {
-                            b.classList.remove('bg-primary', 'text-white');
-                            b.classList.add('bg-gray-100', 'text-gray-600');
+                            b.classList.remove('filter-btn-active');
+                            b.classList.add('filter-btn-inactive');
                         });
-                        this.classList.remove('bg-gray-100', 'text-gray-600');
-                        this.classList.add('bg-primary', 'text-white');
+                        this.classList.remove('filter-btn-inactive');
+                        this.classList.add('filter-btn-active');
                         currentFilters.sort = this.getAttribute('data-sort');
                         updateBookList();
                     });
@@ -476,76 +544,158 @@
                 
                 // 重置筛选按钮
                 document.getElementById('resetFilterBtn').addEventListener('click', function() {
-                    currentFilters = {
-                        search: '',
-                        category: 'all',
-                        sort: 'newest'
-                    };
-                    document.getElementById('searchInput').value = '';
-                    
-                    // 重置分类按钮
-                    document.querySelectorAll('.category-filter').forEach(b => {
-                        b.classList.remove('bg-primary', 'text-white');
-                        b.classList.add('bg-gray-100', 'text-gray-600');
-                    });
-                    document.querySelector('.category-filter[data-category="all"]').classList.remove('bg-gray-100', 'text-gray-600');
-                    document.querySelector('.category-filter[data-category="all"]').classList.add('bg-primary', 'text-white');
-                    
-                    // 重置排序按钮
-                    document.querySelectorAll('.sort-filter').forEach(b => {
-                        b.classList.remove('bg-primary', 'text-white');
-                        b.classList.add('bg-gray-100', 'text-gray-600');
-                    });
-                    document.querySelector('.sort-filter[data-sort="newest"]').classList.remove('bg-gray-100', 'text-gray-600');
-                    document.querySelector('.sort-filter[data-sort="newest"]').classList.add('bg-primary', 'text-white');
-                    
-                    updateBookList();
+                    resetFilters();
                 });
+                
+                // 清除筛选条件按钮（空状态时）
+                document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+                    resetFilters();
+                });
+            }
+
+            // 重置筛选条件
+            function resetFilters() {
+                currentFilters = {
+                    search: '',
+                    category: 'all',
+                    sort: 'newest'
+                };
+                document.getElementById('searchInput').value = '';
+                
+                // 重置分类按钮
+                document.querySelectorAll('.category-filter').forEach(b => {
+                    b.classList.remove('filter-btn-active');
+                    b.classList.add('filter-btn-inactive');
+                });
+                document.querySelector('.category-filter[data-category="all"]').classList.remove('filter-btn-inactive');
+                document.querySelector('.category-filter[data-category="all"]').classList.add('filter-btn-active');
+                
+                // 重置排序按钮
+                document.querySelectorAll('.sort-filter').forEach(b => {
+                    b.classList.remove('filter-btn-active');
+                    b.classList.add('filter-btn-inactive');
+                });
+                document.querySelector('.sort-filter[data-sort="newest"]').classList.remove('filter-btn-inactive');
+                document.querySelector('.sort-filter[data-sort="newest"]').classList.add('filter-btn-active');
+                
+                updateBookList();
             }
 
             // 初始化搜索功能
             function initSearch() {
                 const searchInput = document.getElementById('searchInput');
+                let searchTimeout;
+                
                 searchInput.addEventListener('input', function() {
-                    currentFilters.search = this.value.trim();
+                    // 清除之前的定时器
+                    clearTimeout(searchTimeout);
+                    
+                    // 设置新的定时器，实现搜索防抖
+                    searchTimeout = setTimeout(() => {
+                        currentFilters.search = this.value.trim();
+                        updateBookList();
+                    }, 300);
+                });
+                
+                // 添加搜索图标点击事件
+                const searchIcon = searchInput.nextElementSibling;
+                searchIcon.addEventListener('click', function() {
+                    currentFilters.search = searchInput.value.trim();
                     updateBookList();
+                });
+                
+                // 添加回车键搜索
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        currentFilters.search = this.value.trim();
+                        updateBookList();
+                    }
                 });
             }
 
             // 更新图书列表
             function updateBookList() {
-                // 模拟加载延迟
+                // 显示加载状态
                 const bookListElement = document.getElementById('bookList');
                 bookListElement.innerHTML = `
-                    <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
-                    <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
-                    <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                    <div class='skeleton-loading h-28 rounded-xl mb-4'></div>
+                    <div class='skeleton-loading h-28 rounded-xl mb-4'></div>
+                    <div class='skeleton-loading h-28 rounded-xl mb-4'></div>
                 `;
+                bookListElement.classList.remove('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
                 
+                // 模拟加载延迟
                 setTimeout(() => {
                     const filteredBooks = filterAndSortBooks(mockBooks);
                     renderBookList(filteredBooks);
-                }, 300);
+                }, 400);
             }
 
-            // Toast提示函数
+            // Toast提示函数 - 优化版
             function showToast(message, type = 'success') {
+                // 移除之前的toast
+                const existingToast = document.querySelector('.toast-notification');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
                 const toast = document.createElement('div');
-                toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : type === 'info' ? 'bg-blue-500' : 'bg-primary'} transition-opacity duration-300 z-50`;
-                toast.textContent = message;
+                const icon = type === 'error' ? 'fa-exclamation-circle' : 
+                            type === 'info' ? 'fa-info-circle' : 'fa-check-circle';
+                const bgColor = type === 'error' ? 'bg-red-500' : 
+                               type === 'info' ? 'bg-blue-500' : 'bg-primary';
+                
+                toast.className = `toast-notification fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded-lg text-white ${bgColor} shadow-lg z-50 flex items-center animate-fade-in`;
+                toast.innerHTML = `
+                    <i class='fas ${icon} mr-2'></i>
+                    <span>${message}</span>
+                `;
+                
                 document.body.appendChild(toast);
                 
+                // 添加点击关闭功能
+                toast.addEventListener('click', function() {
+                    this.style.opacity = '0';
+                    setTimeout(() => {
+                        this.remove();
+                    }, 300);
+                });
+                
+                // 自动消失
                 setTimeout(() => {
                     toast.style.opacity = '0';
                     setTimeout(() => {
-                        document.body.removeChild(toast);
+                        if (document.body.contains(toast)) {
+                            document.body.removeChild(toast);
+                        }
                     }, 300);
-                }, 2000);
+                }, 3000);
             }
 
             // 返回按钮事件
             document.getElementById('backBtn').addEventListener('click', function() {
-                window.history.back();
+                // 添加点击动画
+                this.classList.add('scale-90');
+                setTimeout(() => {
+                    this.classList.remove('scale-90');
+                    window.history.back();
+                }, 100);
+            });
+            
+            // 导航栏点击事件
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && !this.classList.contains('text-primary')) {
+                        // 添加点击动画
+                        this.classList.add('scale-95');
+                        setTimeout(() => {
+                            this.classList.remove('scale-95');
+                            window.location.href = href;
+                        }, 100);
+                    }
+                });
             });
 
             // 初始化
@@ -555,7 +705,7 @@
                 // 延迟加载，模拟网络请求
                 setTimeout(() => {
                     updateBookList();
-                }, 500);
+                }, 600);
             }
 
             init();

@@ -236,8 +236,6 @@
 
     <!-- 引入存储管理模块 -->
     <script src='utils/storage.js'></script>
-    <!-- 加载通用底部导航栏 -->
-    <script src='components/load-components.js'></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -417,6 +415,46 @@
                     el.style.opacity = '1';
                 });
             }, 100);
+        });
+    </script>
+    
+    <!-- 底部导航栏 -->
+    <footer class='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 px-2 py-1'>
+        <div class='flex justify-around items-center'>
+            <a href='index.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-book text-lg mb-1'></i>
+                <span class='text-xs'>图书</span>
+            </a>
+            <a href='borrow.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-hand-holding text-lg mb-1'></i>
+                <span class='text-xs'>借阅</span>
+            </a>
+            <a href='return.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-undo-alt text-lg mb-1'></i>
+                <span class='text-xs'>归还</span>
+            </a>
+            <a href='my-borrows.html' class='nav-item flex flex-col items-center py-1 px-3 nav-item-inactive'>
+                <i class='fas fa-user text-lg mb-1'></i>
+                <span class='text-xs'>我的</span>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏点击效果
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // 防止重复点击当前页面
+                if (this.classList.contains('nav-item-active')) {
+                    return;
+                }
+                
+                // 添加点击动画
+                this.classList.add('transform', 'scale-110', 'transition-transform', 'duration-200');
+                setTimeout(() => {
+                    this.classList.remove('transform', 'scale-110');
+                }, 200);
+            });
         });
     </script>
 </body>
