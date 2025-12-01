@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang='zh-CN'>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的书架 - 移动图书馆</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>我的书架 - 雀语图书馆</title>
+    <script src='https://cdn.tailwindcss.com'></script>
+    <link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet' />
     <script>
         tailwind.config = {
             theme: {
@@ -15,7 +15,36 @@
                         secondary: '#10B981',
                         accent: '#059669',
                         light: '#ECFDF5',
-                        dark: '#1E293B'
+                        dark: '#1E293B',
+                        warning: '#FBBF24',
+                        danger: '#EF4444'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'scale-in': 'scaleIn 0.3s ease-out forwards',
+                        'bounce-light': 'bounceLight 0.5s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        bounceLight: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.05)' }
+                        }
                     }
                 }
             }
@@ -23,271 +52,685 @@
     </script>
     <style type='text/tailwindcss'>
         @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-green {
+                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+            }
+            .card-shadow {
+                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
+            }
+            .btn-hover {
+                @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300;
+            }
+            .book-hover {
+                @apply hover:shadow-md transform hover:-translate-y-1 transition-all duration-300;
+            }
+            .shelf-item {
+                @apply bg-white rounded-xl p-4 shadow-sm mb-4 transition-all duration-300;
+            }
+            .shelf-item-hover {
+                @apply hover:shadow-md transform hover:-translate-y-1 transition-all duration-300;
+            }
+            .badge {
+                @apply px-2 py-1 rounded-full text-xs font-medium;
+            }
             .tab-active {
-                @apply bg-primary/10 text-primary border-primary;
+                @apply bg-primary text-white;
             }
             .tab-inactive {
-                @apply bg-gray-100 text-gray-600 border-transparent;
+                @apply text-gray-600 hover:bg-gray-100;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .line-clamp-1 {
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 1;
+            }
+            .line-clamp-2 {
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
             }
         }
     </style>
 </head>
-<body class="bg-light min-h-screen pb-20">
+<body class='bg-light min-h-screen pb-20'>
     <!-- 顶部导航栏 -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="px-4 py-3">
-            <h1 class="text-xl font-semibold text-gray-800">我的书架</h1>
+    <header class='sticky top-0 z-30 bg-white shadow-sm py-3 px-4'>
+        <div class='flex items-center justify-between'>
+            <h1 class='text-lg font-medium'>我的书架</h1>
+            <div class='flex items-center space-x-3'>
+                <button id='searchBtn' class='w-9 h-9 rounded-full bg-light flex items-center justify-center text-gray-700 hover:bg-primary/10 transition-colors'>
+                    <i class='fas fa-search'></i>
+                </button>
+                <button id='addBookBtn' class='w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center hover:bg-secondary transition-colors'>
+                    <i class='fas fa-plus'></i>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- 标签页导航 -->
-    <div class="bg-white border-b">
-        <div class="flex px-4">
-            <button class="tab-btn flex-1 py-3 text-center border-b-2 font-medium transition-all" 
-                    data-tab="borrowed" onclick="switchTab('borrowed')">
-                <i class="fas fa-book-open mr-2"></i>已借阅
+    <!-- 书架统计信息 -->
+    <div class='px-4 py-4'>
+        <div class='grid grid-cols-3 gap-4 mb-4'>
+            <div class='bg-white rounded-xl p-4 text-center shadow-sm'>
+                <div class='text-2xl font-bold text-primary mb-1' id='totalBooks'>0</div>
+                <div class='text-xs text-gray-500'>总藏书</div>
+            </div>
+            <div class='bg-white rounded-xl p-4 text-center shadow-sm'>
+                <div class='text-2xl font-bold text-secondary mb-1' id='readingBooks'>0</div>
+                <div class='text-xs text-gray-500'>在读中</div>
+            </div>
+            <div class='bg-white rounded-xl p-4 text-center shadow-sm'>
+                <div class='text-2xl font-bold text-accent mb-1' id='wishlistBooks'>0</div>
+                <div class='text-xs text-gray-500'>心愿单</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 书架分类选项卡 -->
+    <div class='px-4 mb-4'>
+        <div class='flex bg-white rounded-xl p-1 shadow-sm overflow-x-auto scrollbar-hide'>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-active' data-tab='all'>
+                全部藏书
             </button>
-            <button class="tab-btn flex-1 py-3 text-center border-b-2 font-medium transition-all" 
-                    data-tab="favorites" onclick="switchTab('favorites')">
-                <i class="fas fa-heart mr-2"></i>收藏
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-inactive' data-tab='reading'>
+                正在阅读
             </button>
-            <button class="tab-btn flex-1 py-3 text-center border-b-2 font-medium transition-all" 
-                    data-tab="return" onclick="switchTab('return')">
-                <i class="fas fa-undo mr-2"></i>待归还
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-inactive' data-tab='wishlist'>
+                心愿单
+            </button>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg tab-inactive' data-tab='finished'>
+                已读完
             </button>
         </div>
     </div>
 
-    <!-- 内容区域 -->
-    <main class="p-4">
-        <!-- 已借阅图书 -->
-        <div id="borrowed-content" class="tab-content">
-            <div class="mb-4">
-                <input type="text" id="borrowed-search" placeholder="搜索已借阅图书..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+    <!-- 搜索栏（默认隐藏） -->
+    <div id='searchBar' class='px-4 py-3 bg-white hidden'>
+        <div class='relative'>
+            <div class='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                <i class='fas fa-search text-gray-400'></i>
             </div>
-            <div id="borrowed-list" class="space-y-3">
-                <!-- 借阅图书列表将在这里动态生成 -->
-            </div>
+            <input 
+                type='text' 
+                id='searchInput' 
+                class='w-full py-2.5 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none text-sm' 
+                placeholder='搜索书名、作者或标签'
+            >
+            <button id='closeSearchBtn' class='absolute inset-y-0 right-0 pr-3 flex items-center'>
+                <i class='fas fa-times text-gray-400'></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 书架列表 -->
+    <div class='px-4'>
+        <!-- 空状态 -->
+        <div id='emptyState' class='text-center py-16 hidden'>
+            <i class='fas fa-book-open text-gray-300 text-6xl mb-4'></i>
+            <p class='text-gray-500 mb-2'>书架空空如也</p>
+            <p class='text-xs text-gray-400 mb-6'>添加一些书籍来丰富您的书架吧！</p>
+            <button id='addFirstBookBtn' class='px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium btn-hover'>
+                <i class='fas fa-plus mr-2'></i>
+                添加第一本书
+            </button>
         </div>
 
-        <!-- 收藏图书 -->
-        <div id="favorites-content" class="tab-content hidden">
-            <div class="mb-4">
-                <input type="text" id="favorites-search" placeholder="搜索收藏图书..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-            </div>
-            <div id="favorites-list" class="space-y-3">
-                <!-- 收藏图书列表将在这里动态生成 -->
-            </div>
+        <!-- 书架图书列表 -->
+        <div id='bookshelfList' class='grid grid-cols-1 gap-4'>
+            <!-- 图书项将在这里动态生成 -->
         </div>
+    </div>
 
-        <!-- 待归还图书 -->
-        <div id="return-content" class="tab-content hidden">
-            <div class="mb-4">
-                <input type="text" id="return-search" placeholder="搜索待归还图书..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-            </div>
-            <div id="return-list" class="space-y-3">
-                <!-- 待归还图书列表将在这里动态生成 -->
-            </div>
-        </div>
-    </main>
-
-    <!-- 底部导航栏组件 -->
-    <script src='components/load-components.js'></script>
-
-    <!-- 引入存储管理模块 -->
-    <script src="utils/storage.js"></script>
-
-    <script>
-        // 当前激活的标签页
-        let currentTab = 'borrowed';
-
-        // 获取URL参数
-        function getUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const params = {};
-            for (const [key, value] of urlParams) {
-                params[key] = value;
-            }
-            return params;
-        }
-
-        // 根据URL参数初始化标签页
-        function initializeTabFromUrl() {
-            const params = getUrlParams();
-            if (params.tab) {
-                const validTabs = ['borrowed', 'favorites', 'return'];
-                if (validTabs.includes(params.tab)) {
-                    switchTab(params.tab);
-                    return;
-                }
-            }
-            // 默认激活第一个标签页
-            switchTab('borrowed');
-        }
-
-        // 切换标签页
-        function switchTab(tabName) {
-            // 隐藏所有内容
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
+    <!-- 添加图书弹窗 -->
+    <div id='addBookModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-11/12 max-w-md p-6 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4'>添加图书到书架</h3>
             
-            // 移除所有标签的激活状态
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('tab-active');
-                btn.classList.add('tab-inactive');
-            });
-            
-            // 显示选中的内容
-            document.getElementById(tabName + '-content').classList.remove('hidden');
-            
-            // 设置选中的标签为激活状态
-            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('tab-inactive');
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab-active');
-            
-            currentTab = tabName;
-            
-            // 加载对应标签的数据
-            loadTabData(tabName);
-        }
-
-        // 加载标签页数据
-        function loadTabData(tabName) {
-            const listElement = document.getElementById(tabName + '-list');
-            
-            // 模拟数据加载
-            listElement.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-book text-4xl mb-4"></i>
-                    <p>正在加载${getTabDisplayName(tabName)}...</p>
+            <div class='space-y-4'>
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>书名</label>
+                    <input type='text' id='bookTitle' class='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none' placeholder='请输入书名'>
                 </div>
-            `;
+                
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>作者</label>
+                    <input type='text' id='bookAuthor' class='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none' placeholder='请输入作者'>
+                </div>
+                
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>封面图片URL</label>
+                    <input type='text' id='bookCover' class='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none' placeholder='可选，留空使用默认封面'>
+                </div>
+                
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>分类</label>
+                    <select id='bookCategory' class='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none'>
+                        <option value=''>选择分类</option>
+                        <option value='文学艺术'>文学艺术</option>
+                        <option value='科技'>科技</option>
+                        <option value='历史地理'>历史地理</option>
+                        <option value='哲学宗教'>哲学宗教</option>
+                        <option value='社会科学'>社会科学</option>
+                        <option value='自然科学'>自然科学</option>
+                        <option value='其他'>其他</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>添加到</label>
+                    <div class='flex space-x-2'>
+                        <button class='flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium shelf-type-btn' data-type='reading'>
+                            正在阅读
+                        </button>
+                        <button class='flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium shelf-type-btn' data-type='wishlist'>
+                            心愿单
+                        </button>
+                    </div>
+                </div>
+            </div>
             
-            // 模拟异步加载
-            setTimeout(() => {
-                const mockData = generateMockData(tabName);
-                renderBookList(listElement, mockData, tabName);
-            }, 500);
-        }
+            <div class='flex space-x-3 mt-6'>
+                <button id='cancelAddBtn' class='flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-center btn-hover'>
+                    取消
+                </button>
+                <button id='confirmAddBtn' class='flex-1 py-2.5 bg-primary text-white rounded-lg font-medium text-center btn-hover'>
+                    添加
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // 获取标签页显示名称
-        function getTabDisplayName(tabName) {
-            const names = {
-                'borrowed': '已借阅图书',
-                'favorites': '收藏图书',
-                'return': '待归还图书'
-            };
-            return names[tabName] || tabName;
-        }
+    <!-- 图书操作弹窗 -->
+    <div id='bookActionModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-11/12 max-w-sm p-5 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4' id='actionBookTitle'>操作选项</h3>
+            
+            <div class='space-y-2'>
+                <button class='w-full py-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium text-left px-4 btn-hover book-action-btn' data-action='read'>
+                    <i class='fas fa-book-reader mr-3 text-primary'></i>
+                    标记为正在阅读
+                </button>
+                <button class='w-full py-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium text-left px-4 btn-hover book-action-btn' data-action='finish'>
+                    <i class='fas fa-check-circle mr-3 text-secondary'></i>
+                    标记为已读完
+                </button>
+                <button class='w-full py-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium text-left px-4 btn-hover book-action-btn' data-action='wishlist'>
+                    <i class='fas fa-heart mr-3 text-danger'></i>
+                    移动到心愿单
+                </button>
+                <button class='w-full py-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium text-left px-4 btn-hover book-action-btn' data-action='edit'>
+                    <i class='fas fa-edit mr-3 text-accent'></i>
+                    编辑信息
+                </button>
+                <button class='w-full py-3 bg-gray-50 text-danger rounded-lg text-sm font-medium text-left px-4 btn-hover book-action-btn' data-action='delete'>
+                    <i class='fas fa-trash mr-3'></i>
+                    删除图书
+                </button>
+            </div>
+            
+            <button id='closeActionBtn' class='w-full py-2.5 mt-4 bg-gray-100 text-gray-700 rounded-lg font-medium text-center btn-hover'>
+                取消
+            </button>
+        </div>
+    </div>
 
-        // 生成模拟数据
-        function generateMockData(tabName) {
-            const books = [
-                {
-                    id: 1,
-                    title: 'JavaScript高级程序设计',
-                    author: 'Nicholas C. Zakas',
-                    cover: '📘',
-                    borrowDate: '2024-01-15',
-                    returnDate: '2024-02-15',
-                    status: 'borrowed'
-                },
-                {
-                    id: 2,
-                    title: '深入理解计算机系统',
-                    author: 'Randal E. Bryant',
-                    cover: '💻',
-                    borrowDate: '2024-01-10',
-                    returnDate: '2024-02-10',
-                    status: 'borrowed'
-                },
-                {
-                    id: 3,
-                    title: '设计模式',
-                    author: 'Erich Gamma',
-                    cover: '🎨',
-                    borrowDate: '2024-01-20',
-                    returnDate: '2024-02-20',
-                    status: 'return'
+    <!-- 删除确认弹窗 -->
+    <div id='deleteConfirmModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-4/5 max-w-sm p-5 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4'>确认删除</h3>
+            <p class='text-sm text-gray-600 text-center mb-6'>确定要从书架中删除这本书吗？此操作不可撤销。</p>
+            <div class='flex space-x-3'>
+                <button id='cancelDeleteBtn' class='flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-center btn-hover'>
+                    取消
+                </button>
+                <button id='confirmDeleteBtn' class='flex-1 py-2.5 bg-danger text-white rounded-lg font-medium text-center btn-hover'>
+                    确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载通用底部导航栏 -->
+    <script src='components/load-components.js'></script>
+    
+    <!-- 引入存储管理模块 -->
+    <script src='utils/storage.js'></script>
+    
+    <script>
+        // 书架管理类
+        class BookshelfManager {
+            constructor() {
+                this.currentBookshelf = [];
+                this.currentTab = 'all';
+                this.currentSearch = '';
+                this.currentBookToEdit = null;
+                this.init();
+            }
+
+            init() {
+                this.loadBookshelf();
+                this.bindEvents();
+                this.renderBookshelf();
+            }
+
+            loadBookshelf() {
+                this.currentBookshelf = StorageManager.getBookshelfBooks() || [];
+                this.updateStats();
+            }
+
+            saveBookshelf() {
+                StorageManager.saveBookshelfBooks(this.currentBookshelf);
+                this.updateStats();
+            }
+
+            updateStats() {
+                const total = this.currentBookshelf.length;
+                const reading = this.currentBookshelf.filter(book => book.status === 'reading').length;
+                const wishlist = this.currentBookshelf.filter(book => book.status === 'wishlist').length;
+                
+                document.getElementById('totalBooks').textContent = total;
+                document.getElementById('readingBooks').textContent = reading;
+                document.getElementById('wishlistBooks').textContent = wishlist;
+
+                // 显示/隐藏空状态
+                const emptyState = document.getElementById('emptyState');
+                const bookshelfList = document.getElementById('bookshelfList');
+                
+                if (total === 0) {
+                    emptyState.classList.remove('hidden');
+                    bookshelfList.classList.add('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    bookshelfList.classList.remove('hidden');
                 }
-            ];
-            
-            return books.filter(book => book.status === tabName || tabName === 'favorites');
+            }
+
+            addBook(bookData) {
+                const newBook = {
+                    id: Date.now(),
+                    title: bookData.title.trim(),
+                    author: bookData.author.trim(),
+                    cover: bookData.cover || `https://picsum.photos/id/${Math.floor(Math.random() * 100)}/300/450`,
+                    category: bookData.category || '其他',
+                    status: bookData.status || 'reading',
+                    addedDate: new Date().toISOString(),
+                    progress: 0,
+                    rating: 0,
+                    notes: ''
+                };
+
+                this.currentBookshelf.unshift(newBook);
+                this.saveBookshelf();
+                this.renderBookshelf();
+                
+                // 显示添加成功提示
+                this.showToast(`《${newBook.title}》已添加到书架`);
+            }
+
+            updateBook(bookId, updates) {
+                const bookIndex = this.currentBookshelf.findIndex(book => book.id === bookId);
+                if (bookIndex !== -1) {
+                    this.currentBookshelf[bookIndex] = { ...this.currentBookshelf[bookIndex], ...updates };
+                    this.saveBookshelf();
+                    this.renderBookshelf();
+                    
+                    // 显示更新成功提示
+                    this.showToast('图书信息已更新');
+                }
+            }
+
+            deleteBook(bookId) {
+                const bookIndex = this.currentBookshelf.findIndex(book => book.id === bookId);
+                if (bookIndex !== -1) {
+                    const deletedBook = this.currentBookshelf[bookIndex];
+                    this.currentBookshelf.splice(bookIndex, 1);
+                    this.saveBookshelf();
+                    this.renderBookshelf();
+                    
+                    // 显示删除成功提示
+                    this.showToast(`《${deletedBook.title}》已从书架删除`);
+                }
+            }
+
+            getFilteredBooks() {
+                let filteredBooks = [...this.currentBookshelf];
+
+                // 按标签筛选
+                if (this.currentTab !== 'all') {
+                    filteredBooks = filteredBooks.filter(book => book.status === this.currentTab);
+                }
+
+                // 按搜索关键词筛选
+                if (this.currentSearch) {
+                    const searchLower = this.currentSearch.toLowerCase();
+                    filteredBooks = filteredBooks.filter(book => 
+                        book.title.toLowerCase().includes(searchLower) ||
+                        book.author.toLowerCase().includes(searchLower) ||
+                        book.category.toLowerCase().includes(searchLower)
+                    );
+                }
+
+                return filteredBooks;
         }
 
-        // 渲染图书列表
-        function renderBookList(container, books, tabName) {
-            if (books.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-inbox text-4xl mb-4"></i>
-                        <p>暂无${getTabDisplayName(tabName)}</p>
+        renderBookshelf() {
+            const bookshelfList = document.getElementById('bookshelfList');
+            const filteredBooks = this.getFilteredBooks();
+            
+            if (filteredBooks.length === 0) {
+                bookshelfList.innerHTML = `
+                    <div class='text-center py-12'>
+                        <i class='fas fa-search text-gray-300 text-4xl mb-3'></i>
+                        <p class='text-gray-500 text-sm'>没有找到符合条件的图书</p>
                     </div>
                 `;
                 return;
             }
+            
+            bookshelfList.innerHTML = filteredBooks.map(book => this.createBookItem(book)).join('');
+        }
 
-            container.innerHTML = books.map(book => `
-                <div class="bg-white rounded-lg shadow-sm border p-4">
-                    <div class="flex items-center">
-                        <div class="text-4xl mr-4">${book.cover}</div>
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-gray-800">${book.title}</h3>
-                            <p class="text-sm text-gray-600">${book.author}</p>
-                            ${tabName !== 'favorites' ? `
-                                <div class="text-xs text-gray-500 mt-1">
-                                    <span>借阅日期: ${book.borrowDate}</span>
-                                    <span class="mx-2">|</span>
-                                    <span>应还日期: ${book.returnDate}</span>
-                                </div>
-                            ` : ''}
+        createBookItem(book) {
+            const statusIcons = {
+                reading: 'fa-book-reader',
+                finished: 'fa-check-circle',
+                wishlist: 'fa-heart'
+            };
+            
+            const statusColors = {
+                reading: 'text-primary',
+                finished: 'text-secondary',
+                wishlist: 'text-danger'
+            };
+            
+            const statusTexts = {
+                reading: '正在阅读',
+                finished: '已读完',
+                wishlist: '心愿单'
+            };
+            
+            return `
+                <div class='shelf-item shelf-item-hover' data-book-id='${book.id}'>
+                    <div class='flex items-center space-x-4'>
+                        <img src='${book.cover}' alt='${book.title}' class='w-16 h-20 rounded-lg object-cover'>
+                        <div class='flex-1 min-w-0'>
+                            <div class='flex items-center justify-between mb-1'>
+                                <h3 class='font-medium text-gray-900 line-clamp-1'>${book.title}</h3>
+                                <button class='book-menu-btn w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-primary/10 hover:text-primary transition-colors'>
+                                    <i class='fas fa-ellipsis-v text-xs'></i>
+                                </button>
+                            </div>
+                            <p class='text-sm text-gray-600 mb-2 line-clamp-1'>${book.author}</p>
+                            <div class='flex items-center space-x-2'>
+                                <span class='badge bg-gray-100 text-gray-700 text-xs'>${book.category}</span>
+                                <span class='badge ${statusColors[book.status]} bg-${statusColors[book.status].replace('text-', '')}/10 text-xs'>
+                                    <i class='${statusIcons[book.status]} mr-1'></i>
+                                    ${statusTexts[book.status]}
+                                </span>
+                            </div>
                         </div>
-                        <button class="ml-2 px-3 py-1 bg-blue-500 text-white rounded text-sm" 
-                                onclick="handleBookAction(${book.id}, '${tabName}')">
-                            ${getActionButtonText(tabName)}
-                        </button>
                     </div>
                 </div>
-            `).join('');
+            `;
         }
 
-        // 获取操作按钮文本
-        function getActionButtonText(tabName) {
-            const actions = {
-                'borrowed': '续借',
-                'favorites': '阅读',
-                'return': '归还'
-            };
-            return actions[tabName] || '操作';
-        }
+            getStatusInfo(status) {
+                const statusMap = {
+                    'reading': { text: '在读中', badgeClass: 'bg-primary/80' },
+                    'finished': { text: '已读完', badgeClass: 'bg-secondary/80' },
+                    'wishlist': { text: '心愿单', badgeClass: 'bg-danger/80' }
+                };
+                return statusMap[status] || { text: '未分类', badgeClass: 'bg-gray-500/80' };
+            }
 
-        // 处理图书操作
-        function handleBookAction(bookId, actionType) {
-            const actions = {
-                'borrowed': '续借',
-                'favorites': '阅读',
-                'return': '归还'
-            };
-            
-            alert(`执行${actions[actionType]}操作 - 图书ID: ${bookId}`);
-            // 这里可以添加实际的操作逻辑
-        }
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        // 初始化页面
-        document.addEventListener('DOMContentLoaded', function() {
-            // 根据URL参数初始化标签页
-            initializeTabFromUrl();
-            
-            // 添加搜索功能
-            document.querySelectorAll('input[type="text"]').forEach(input => {
-                input.addEventListener('input', function() {
-                    // 搜索功能实现
-                    console.log('搜索:', this.value);
+                if (diffDays === 0) return '今天';
+                if (diffDays === 1) return '昨天';
+                if (diffDays < 7) return `${diffDays}天前`;
+                
+                return `${date.getMonth() + 1}月${date.getDate()}日`;
+            }
+
+            showToast(message) {
+                // 创建toast元素
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium z-50 animate-bounce-light';
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                // 3秒后移除toast
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            bindEvents() {
+                // 搜索相关事件
+                document.getElementById('searchBtn').addEventListener('click', () => {
+                    const searchBar = document.getElementById('searchBar');
+                    searchBar.classList.toggle('hidden');
+                    if (!searchBar.classList.contains('hidden')) {
+                        document.getElementById('searchInput').focus();
+                    }
                 });
-            });
+
+                document.getElementById('closeSearchBtn').addEventListener('click', () => {
+                    document.getElementById('searchBar').classList.add('hidden');
+                    document.getElementById('searchInput').value = '';
+                    this.currentSearch = '';
+                    this.renderBookshelf();
+                });
+
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.currentSearch = e.target.value;
+                    this.renderBookshelf();
+                });
+
+                // 添加图书相关事件
+                document.getElementById('addBookBtn').addEventListener('click', () => {
+                    this.showAddBookModal();
+                });
+
+                document.getElementById('addFirstBookBtn').addEventListener('click', () => {
+                    this.showAddBookModal();
+                });
+
+                document.getElementById('cancelAddBtn').addEventListener('click', () => {
+                    this.hideAddBookModal();
+                });
+
+                document.getElementById('confirmAddBtn').addEventListener('click', () => {
+                    this.confirmAddBook();
+                });
+
+                // 书架类型选择
+                document.querySelectorAll('.shelf-type-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.querySelectorAll('.shelf-type-btn').forEach(b => {
+                            b.classList.remove('bg-primary', 'text-white');
+                            b.classList.add('bg-gray-100', 'text-gray-700');
+                        });
+                        btn.classList.add('bg-primary', 'text-white');
+                        btn.classList.remove('bg-gray-100', 'text-gray-700');
+                    });
+                });
+
+                // 选项卡切换
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-btn').forEach(b => {
+                            b.classList.remove('tab-active');
+                            b.classList.add('tab-inactive');
+                        });
+                        btn.classList.add('tab-active');
+                        btn.classList.remove('tab-inactive');
+                        
+                        this.currentTab = btn.getAttribute('data-tab');
+                        this.renderBookshelf();
+                    });
+                });
+
+                // 图书操作事件委托
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('book-action-btn')) {
+                        const bookId = parseInt(e.target.getAttribute('data-book-id'));
+                        this.showBookActionModal(bookId);
+                    }
+                });
+
+                // 关闭操作弹窗
+                document.getElementById('closeActionBtn').addEventListener('click', () => {
+                    this.hideBookActionModal();
+                });
+
+                // 图书操作按钮
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('book-action-btn') && e.target.getAttribute('data-action')) {
+                        const action = e.target.getAttribute('data-action');
+                        this.handleBookAction(action);
+                    }
+                });
+
+                // 删除确认相关事件
+                document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+                    this.hideDeleteConfirmModal();
+                });
+
+                document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+                    this.confirmDeleteBook();
+                });
+            }
+
+            showAddBookModal() {
+                document.getElementById('addBookModal').classList.remove('hidden');
+                // 重置表单
+                document.getElementById('bookTitle').value = '';
+                document.getElementById('bookAuthor').value = '';
+                document.getElementById('bookCover').value = '';
+                document.getElementById('bookCategory').value = '';
+                
+                // 重置书架类型选择
+                document.querySelectorAll('.shelf-type-btn').forEach(btn => {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-700');
+                });
+                document.querySelector('.shelf-type-btn[data-type="reading"]').classList.add('bg-primary', 'text-white');
+            }
+
+            hideAddBookModal() {
+                document.getElementById('addBookModal').classList.add('hidden');
+            }
+
+            confirmAddBook() {
+                const title = document.getElementById('bookTitle').value.trim();
+                const author = document.getElementById('bookAuthor').value.trim();
+                const cover = document.getElementById('bookCover').value.trim();
+                const category = document.getElementById('bookCategory').value;
+                
+                // 获取选中的书架类型
+                const selectedTypeBtn = document.querySelector('.shelf-type-btn.bg-primary');
+                const status = selectedTypeBtn ? selectedTypeBtn.getAttribute('data-type') : 'reading';
+
+                if (!title || !author) {
+                    alert('请填写书名和作者');
+                    return;
+                }
+
+                this.addBook({
+                    title,
+                    author,
+                    cover,
+                    category,
+                    status
+                });
+
+                this.hideAddBookModal();
+            }
+
+            showBookActionModal(bookId) {
+                const book = this.currentBookshelf.find(b => b.id === bookId);
+                if (!book) return;
+
+                this.currentBookToEdit = bookId;
+                document.getElementById('actionBookTitle').textContent = book.title;
+                document.getElementById('bookActionModal').classList.remove('hidden');
+            }
+
+            hideBookActionModal() {
+                document.getElementById('bookActionModal').classList.add('hidden');
+                this.currentBookToEdit = null;
+            }
+
+            handleBookAction(action) {
+                if (!this.currentBookToEdit) return;
+
+                switch (action) {
+                    case 'read':
+                        this.updateBook(this.currentBookToEdit, { status: 'reading' });
+                        break;
+                    case 'finish':
+                        this.updateBook(this.currentBookToEdit, { status: 'finished' });
+                        break;
+                    case 'wishlist':
+                        this.updateBook(this.currentBookToEdit, { status: 'wishlist' });
+                        break;
+                    case 'edit':
+                        this.editBook(this.currentBookToEdit);
+                        break;
+                    case 'delete':
+                        this.showDeleteConfirmModal();
+                        break;
+                }
+
+                this.hideBookActionModal();
+            }
+
+            editBook(bookId) {
+                // 这里可以实现编辑功能
+                alert('编辑功能即将上线，敬请期待！');
+            }
+
+            showDeleteConfirmModal() {
+                document.getElementById('deleteConfirmModal').classList.remove('hidden');
+            }
+
+            hideDeleteConfirmModal() {
+                document.getElementById('deleteConfirmModal').classList.add('hidden');
+            }
+
+            confirmDeleteBook() {
+                if (this.currentBookToEdit) {
+                    this.deleteBook(this.currentBookToEdit);
+                    this.hideDeleteConfirmModal();
+                }
+            }
+        }
+
+        // 页面加载完成后初始化书架管理器
+        document.addEventListener('DOMContentLoaded', function() {
+            new BookshelfManager();
         });
     </script>
 </body>

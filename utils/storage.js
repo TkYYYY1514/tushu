@@ -10,7 +10,11 @@ const StorageManager = {
         BORROW_RECORDS: 'library_borrow_records',
         BOOK_CACHE: 'library_book_cache',
         USER_TYPE: 'library_user_type',
-        LOGIN_STATUS: 'library_login_status'
+        LOGIN_STATUS: 'library_login_status',
+        BOOKSHELF_BOOKS: 'library_bookshelf_books',
+        HISTORY_BOOKS: 'library_history_books',
+        READING_GOALS: 'library_reading_goals',
+        USER_PREFERENCES: 'library_user_preferences'
     },
 
     /**
@@ -477,6 +481,192 @@ const StorageManager = {
                 console.error('初始化模拟数据失败:', e);
             }
         }
+    },
+
+    /**
+     * 获取书架图书数据
+     * @returns {Array} 书架图书数组
+     */
+    getBookshelfBooks() {
+        if (!this.isStorageAvailable()) return [];
+        
+        try {
+            const booksStr = localStorage.getItem(this.KEYS.BOOKSHELF_BOOKS);
+            return booksStr ? JSON.parse(booksStr) : [];
+        } catch (e) {
+            console.error('获取书架图书失败:', e);
+            return [];
+        }
+    },
+
+    /**
+     * 保存书架图书数据
+     * @param {Array} books - 书架图书数组
+     * @returns {boolean} 保存是否成功
+     */
+    saveBookshelfBooks(books) {
+        if (!this.isStorageAvailable()) return false;
+        
+        try {
+            localStorage.setItem(this.KEYS.BOOKSHELF_BOOKS, JSON.stringify(books));
+            return true;
+        } catch (e) {
+            console.error('保存书架图书失败:', e);
+            return false;
+        }
+    },
+
+    /**
+     * 获取历史借阅记录
+     * @returns {Array} 历史借阅记录数组
+     */
+    getHistoryBooks() {
+        if (!this.isStorageAvailable()) return [];
+        
+        try {
+            const data = localStorage.getItem(this.KEYS.HISTORY_BOOKS);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('获取历史借阅记录失败:', e);
+            return [];
+        }
+    },
+
+    /**
+     * 保存历史借阅记录
+     * @param {Array} books - 历史借阅记录数组
+     * @returns {boolean} 保存是否成功
+     */
+    saveHistoryBooks(books) {
+        if (!this.isStorageAvailable()) return false;
+        
+        try {
+            localStorage.setItem(this.KEYS.HISTORY_BOOKS, JSON.stringify(books));
+            return true;
+        } catch (e) {
+            console.error('保存历史借阅记录失败:', e);
+            return false;
+        }
+    },
+
+    /**
+     * 获取阅读目标
+     * @returns {Object|null} 阅读目标对象或null
+     */
+    getReadingGoals() {
+        if (!this.isStorageAvailable()) return null;
+        
+        try {
+            const data = localStorage.getItem(this.KEYS.READING_GOALS);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error('获取阅读目标失败:', e);
+            return null;
+        }
+    },
+
+    /**
+     * 保存阅读目标
+     * @param {Object} goals - 阅读目标对象
+     * @returns {boolean} 保存是否成功
+     */
+    saveReadingGoals(goals) {
+        if (!this.isStorageAvailable()) return false;
+        
+        try {
+            localStorage.setItem(this.KEYS.READING_GOALS, JSON.stringify(goals));
+            return true;
+        } catch (e) {
+            console.error('保存阅读目标失败:', e);
+            return false;
+        }
+    },
+
+    /**
+     * 获取用户偏好设置
+     * @returns {Object|null} 用户偏好设置对象或null
+     */
+    getUserPreferences() {
+        if (!this.isStorageAvailable()) return null;
+        
+        try {
+            const data = localStorage.getItem(this.KEYS.USER_PREFERENCES);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error('获取用户偏好设置失败:', e);
+            return null;
+        }
+    },
+
+    /**
+     * 保存用户偏好设置
+     * @param {Object} prefs - 用户偏好设置对象
+     * @returns {boolean} 保存是否成功
+     */
+    saveUserPreferences(prefs) {
+        if (!this.isStorageAvailable()) return false;
+        
+        try {
+            localStorage.setItem(this.KEYS.USER_PREFERENCES, JSON.stringify(prefs));
+            return true;
+        } catch (e) {
+            console.error('保存用户偏好设置失败:', e);
+            return false;
+        }
+    },
+
+    /**
+     * 初始化书架模拟数据
+     */
+    initBookshelfMockData() {
+        // 检查是否已有书架数据，如果没有则创建模拟数据
+        if (this.getBookshelfBooks().length === 0) {
+            const mockBookshelf = [
+                {
+                    id: 2001,
+                    title: '活着',
+                    author: '余华',
+                    cover: 'https://picsum.photos/id/24/300/450',
+                    category: '文学艺术',
+                    status: 'reading',
+                    addedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                    progress: 0,
+                    rating: 0,
+                    notes: ''
+                },
+                {
+                    id: 2002,
+                    title: '三体',
+                    author: '刘慈欣',
+                    cover: 'https://picsum.photos/id/20/300/450',
+                    category: '科技',
+                    status: 'finished',
+                    addedDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    progress: 100,
+                    rating: 5,
+                    notes: '非常震撼的科幻作品'
+                },
+                {
+                    id: 2003,
+                    title: '解忧杂货店',
+                    author: '东野圭吾',
+                    cover: 'https://picsum.photos/id/22/300/450',
+                    category: '文学艺术',
+                    status: 'wishlist',
+                    addedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                    progress: 0,
+                    rating: 0,
+                    notes: '期待阅读的温暖故事'
+                }
+            ];
+            
+            try {
+                this.saveBookshelfBooks(mockBookshelf);
+                console.log('书架模拟数据初始化完成');
+            } catch (e) {
+                console.error('初始化书架模拟数据失败:', e);
+            }
+        }
     }
 };
 
@@ -485,4 +675,5 @@ if (typeof window !== 'undefined') {
     window.StorageManager = StorageManager;
     // 初始化模拟数据
     StorageManager.initMockData();
+    StorageManager.initBookshelfMockData();
 }

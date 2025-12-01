@@ -164,7 +164,52 @@
             </div>
         </div>
 
-        <!-- 借阅统计图表已移除 -->
+        <!-- 个人统计卡片 -->
+        <div class='bg-white rounded-xl p-4 mb-6 shadow-sm'>
+            <div class='flex justify-between items-center mb-4'>
+                <h3 class='text-base font-medium'>阅读统计</h3>
+                <button id='statsToggle' class='text-primary text-sm font-medium'>
+                    <i class='fas fa-chevron-down'></i>
+                </button>
+            </div>
+            <div id='statsContent' class='grid grid-cols-2 gap-4'>
+                <div class='text-center'>
+                    <div class='text-2xl font-bold text-primary mb-1' id='totalReadBooks'>0</div>
+                    <div class='text-xs text-gray-500'>累计阅读</div>
+                </div>
+                <div class='text-center'>
+                    <div class='text-2xl font-bold text-secondary mb-1' id='avgReadingTime'>0h</div>
+                    <div class='text-xs text-gray-500'>平均阅读时长</div>
+                </div>
+                <div class='text-center'>
+                    <div class='text-2xl font-bold text-accent mb-1' id='favoriteCategory'>-</div>
+                    <div class='text-xs text-gray-500'>偏好分类</div>
+                </div>
+                <div class='text-center'>
+                    <div class='text-2xl font-bold text-warning mb-1' id='readingStreak'>0</div>
+                    <div class='text-xs text-gray-500'>连续阅读天数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速操作卡片 -->
+        <div class='bg-white rounded-xl p-4 mb-6 shadow-sm'>
+            <h3 class='text-base font-medium mb-4'>快速操作</h3>
+            <div class='grid grid-cols-2 gap-3'>
+                <button id='editProfileBtn' class='py-3 bg-primary/10 text-primary rounded-lg text-sm font-medium btn-hover'>
+                    <i class='fas fa-user-edit mr-1'></i>编辑资料
+                </button>
+                <button id='readingGoalsBtn' class='py-3 bg-secondary/10 text-secondary rounded-lg text-sm font-medium btn-hover'>
+                    <i class='fas fa-flag mr-1'></i>阅读目标
+                </button>
+                <button id='preferencesBtn' class='py-3 bg-accent/10 text-accent rounded-lg text-sm font-medium btn-hover'>
+                    <i class='fas fa-cog mr-1'></i>偏好设置
+                </button>
+                <button id='helpCenterBtn' class='py-3 bg-warning/10 text-warning rounded-lg text-sm font-medium btn-hover'>
+                    <i class='fas fa-question-circle mr-1'></i>帮助中心
+                </button>
+            </div>
+        </div>
 
         <!-- 筛选和排序 -->
         <div class='flex justify-between items-center mb-4'>
@@ -262,6 +307,112 @@
                 </button>
                 <button id='confirmRenewBtn' class='flex-1 py-2.5 bg-primary text-white rounded-lg font-medium text-center btn-hover'>
                     确认续借
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑资料弹窗 -->
+    <div id='editProfileModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-4/5 max-w-sm p-5 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4'>编辑个人资料</h3>
+            <form id='profileForm'>
+                <div class='space-y-4'>
+                    <div>
+                        <label class='block text-sm font-medium text-gray-700 mb-1'>昵称</label>
+                        <input type='text' id='profileName' class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'>
+                    </div>
+                    <div>
+                        <label class='block text-sm font-medium text-gray-700 mb-1'>用户类型</label>
+                        <select id='profileType' class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'>
+                            <option value='student'>学生</option>
+                            <option value='teacher'>教职工</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class='block text-sm font-medium text-gray-700 mb-1'>头像URL</label>
+                        <input type='text' id='profileAvatar' class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent' placeholder='输入图片链接'>
+                    </div>
+                </div>
+                <div class='flex space-x-3 mt-6'>
+                    <button type='button' id='cancelProfileBtn' class='flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-center'>
+                        取消
+                    </button>
+                    <button type='submit' class='flex-1 py-2.5 bg-primary text-white rounded-lg font-medium text-center btn-hover'>
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 阅读目标弹窗 -->
+    <div id='readingGoalsModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-4/5 max-w-sm p-5 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4'>设置阅读目标</h3>
+            <div class='space-y-4'>
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>每月阅读目标（本）</label>
+                    <input type='number' id='monthlyGoal' min='1' max='50' value='5' class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'>
+                </div>
+                <div>
+                    <label class='block text-sm font-medium text-gray-700 mb-1'>每日阅读时长（小时）</label>
+                    <input type='number' id='dailyReadingTime' min='0.5' max='8' step='0.5' value='1' class='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent'>
+                </div>
+                <div class='bg-primary/5 p-3 rounded-lg'>
+                    <div class='flex justify-between text-sm'>
+                        <span>本月进度</span>
+                        <span id='goalProgress'>0/5</span>
+                    </div>
+                    <div class='w-full bg-gray-200 rounded-full h-2 mt-1'>
+                        <div id='goalProgressBar' class='bg-primary h-2 rounded-full transition-all duration-500' style='width: 0%'></div>
+                    </div>
+                </div>
+            </div>
+            <div class='flex space-x-3 mt-6'>
+                <button type='button' id='cancelGoalsBtn' class='flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-center'>
+                    取消
+                </button>
+                <button type='button' id='saveGoalsBtn' class='flex-1 py-2.5 bg-primary text-white rounded-lg font-medium text-center btn-hover'>
+                    保存目标
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 偏好设置弹窗 -->
+    <div id='preferencesModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-4/5 max-w-sm p-5 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4'>偏好设置</h3>
+            <div class='space-y-4'>
+                <div class='flex justify-between items-center'>
+                    <span class='text-sm font-medium'>夜间模式</span>
+                    <label class='relative inline-flex items-center cursor-pointer'>
+                        <input type='checkbox' id='darkModeToggle' class='sr-only peer'>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+                <div class='flex justify-between items-center'>
+                    <span class='text-sm font-medium'>到期提醒</span>
+                    <label class='relative inline-flex items-center cursor-pointer'>
+                        <input type='checkbox' id='dueReminderToggle' checked class='sr-only peer'>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+                <div class='flex justify-between items-center'>
+                    <span class='text-sm font-medium'>阅读统计</span>
+                    <label class='relative inline-flex items-center cursor-pointer'>
+                        <input type='checkbox' id='readingStatsToggle' checked class='sr-only peer'>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+            </div>
+            <div class='flex space-x-3 mt-6'>
+                <button type='button' id='cancelPrefsBtn' class='flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-center'>
+                    取消
+                </button>
+                <button type='button' id='savePrefsBtn' class='flex-1 py-2.5 bg-primary text-white rounded-lg font-medium text-center btn-hover'>
+                    保存设置
                 </button>
             </div>
         </div>
@@ -389,7 +540,7 @@
 
             // 更新用户信息
             function updateUserInfo() {
-                const userInfo = StorageManager.getCurrentUser();
+                const userInfo = StorageManager.getUserInfo();
                 if (userInfo) {
                     document.getElementById('userName').textContent = userInfo.name || '图书馆用户';
                     document.getElementById('userType').innerHTML = userInfo.type === 'student' 
@@ -637,6 +788,173 @@
                 }, 2000);
             }
 
+            // 更新阅读统计数据
+            function updateReadingStats() {
+                const borrowedBooks = StorageManager.getBorrowedBooks();
+                const historyBooks = StorageManager.getHistoryBooks();
+                
+                // 累计阅读数量
+                const totalRead = historyBooks.length;
+                document.getElementById('totalReadBooks').textContent = totalRead;
+                
+                // 平均阅读时长（模拟数据）
+                const avgTime = totalRead > 0 ? Math.round(totalRead * 1.5) : 0;
+                document.getElementById('avgReadingTime').textContent = `${avgTime}h`;
+                
+                // 偏好分类（模拟数据）
+                const categories = {};
+                historyBooks.forEach(book => {
+                    if (book.category) {
+                        categories[book.category] = (categories[book.category] || 0) + 1;
+                    }
+                });
+                const favoriteCategory = Object.keys(categories).length > 0 
+                    ? Object.keys(categories).reduce((a, b) => categories[a] > categories[b] ? a : b)
+                    : '-';
+                document.getElementById('favoriteCategory').textContent = favoriteCategory;
+                
+                // 连续阅读天数（模拟数据）
+                const readingStreak = Math.min(30, Math.floor(totalRead / 2));
+                document.getElementById('readingStreak').textContent = readingStreak;
+            }
+
+            // 显示/隐藏统计卡片
+            function toggleStats() {
+                const statsContent = document.getElementById('statsContent');
+                const statsToggle = document.getElementById('statsToggle');
+                
+                if (statsContent.classList.contains('hidden')) {
+                    statsContent.classList.remove('hidden');
+                    statsToggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                } else {
+                    statsContent.classList.add('hidden');
+                    statsToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                }
+            }
+
+            // 显示编辑资料弹窗
+            function showEditProfileModal() {
+                const userInfo = StorageManager.getUserInfo();
+                if (userInfo) {
+                    document.getElementById('profileName').value = userInfo.name || '';
+                    document.getElementById('profileType').value = userInfo.type || 'student';
+                    document.getElementById('profileAvatar').value = userInfo.avatar || '';
+                }
+                document.getElementById('editProfileModal').classList.remove('hidden');
+            }
+
+            // 隐藏编辑资料弹窗
+            function hideEditProfileModal() {
+                document.getElementById('editProfileModal').classList.add('hidden');
+            }
+
+            // 保存个人资料
+            function saveProfile() {
+                const name = document.getElementById('profileName').value.trim();
+                const type = document.getElementById('profileType').value;
+                const avatar = document.getElementById('profileAvatar').value.trim();
+                
+                if (!name) {
+                    showToast('请输入昵称', 'error');
+                    return;
+                }
+                
+                const userInfo = {
+                    name,
+                    type,
+                    avatar: avatar || 'https://picsum.photos/100/100'
+                };
+                
+                if (StorageManager.saveUserInfo(userInfo)) {
+                    showToast('个人资料保存成功');
+                    hideEditProfileModal();
+                    updateUserInfo();
+                } else {
+                    showToast('保存失败，请重试', 'error');
+                }
+            }
+
+            // 显示阅读目标弹窗
+            function showReadingGoalsModal() {
+                const goals = StorageManager.getReadingGoals() || { monthlyGoal: 5, dailyReadingTime: 1 };
+                document.getElementById('monthlyGoal').value = goals.monthlyGoal;
+                document.getElementById('dailyReadingTime').value = goals.dailyReadingTime;
+                
+                // 更新进度显示
+                updateGoalProgress();
+                document.getElementById('readingGoalsModal').classList.remove('hidden');
+            }
+
+            // 隐藏阅读目标弹窗
+            function hideReadingGoalsModal() {
+                document.getElementById('readingGoalsModal').classList.add('hidden');
+            }
+
+            // 更新目标进度
+            function updateGoalProgress() {
+                const monthlyGoal = parseInt(document.getElementById('monthlyGoal').value) || 5;
+                const historyBooks = StorageManager.getHistoryBooks();
+                const thisMonthBooks = historyBooks.filter(book => {
+                    const borrowDate = new Date(book.borrowDate);
+                    const now = new Date();
+                    return borrowDate.getMonth() === now.getMonth() && borrowDate.getFullYear() === now.getFullYear();
+                });
+                
+                const progress = Math.min(thisMonthBooks.length, monthlyGoal);
+                const percentage = Math.min((progress / monthlyGoal) * 100, 100);
+                
+                document.getElementById('goalProgress').textContent = `${progress}/${monthlyGoal}`;
+                document.getElementById('goalProgressBar').style.width = `${percentage}%`;
+            }
+
+            // 保存阅读目标
+            function saveReadingGoals() {
+                const monthlyGoal = parseInt(document.getElementById('monthlyGoal').value) || 5;
+                const dailyReadingTime = parseFloat(document.getElementById('dailyReadingTime').value) || 1;
+                
+                const goals = {
+                    monthlyGoal,
+                    dailyReadingTime
+                };
+                
+                if (StorageManager.saveReadingGoals(goals)) {
+                    showToast('阅读目标已保存');
+                    hideReadingGoalsModal();
+                } else {
+                    showToast('保存失败，请重试', 'error');
+                }
+            }
+
+            // 显示偏好设置弹窗
+            function showPreferencesModal() {
+                const prefs = StorageManager.getUserPreferences() || { darkMode: false, dueReminder: true, readingStats: true };
+                document.getElementById('darkModeToggle').checked = prefs.darkMode || false;
+                document.getElementById('dueReminderToggle').checked = prefs.dueReminder !== false;
+                document.getElementById('readingStatsToggle').checked = prefs.readingStats !== false;
+                document.getElementById('preferencesModal').classList.remove('hidden');
+            }
+
+            // 隐藏偏好设置弹窗
+            function hidePreferencesModal() {
+                document.getElementById('preferencesModal').classList.add('hidden');
+            }
+
+            // 保存偏好设置
+            function savePreferences() {
+                const prefs = {
+                    darkMode: document.getElementById('darkModeToggle').checked,
+                    dueReminder: document.getElementById('dueReminderToggle').checked,
+                    readingStats: document.getElementById('readingStatsToggle').checked
+                };
+                
+                if (StorageManager.saveUserPreferences(prefs)) {
+                    showToast('偏好设置已保存');
+                    hidePreferencesModal();
+                } else {
+                    showToast('保存失败，请重试', 'error');
+                }
+            }
+
             // 事件监听器设置
             function setupEventListeners() {
                 // 设置按钮
@@ -658,6 +976,33 @@
                 document.getElementById('sortBtn').addEventListener('click', function() {
                     showToast('排序功能开发中', 'info');
                 });
+
+                // 统计卡片切换
+                document.getElementById('statsToggle').addEventListener('click', toggleStats);
+
+                // 快速操作按钮
+                document.getElementById('editProfileBtn').addEventListener('click', showEditProfileModal);
+                document.getElementById('readingGoalsBtn').addEventListener('click', showReadingGoalsModal);
+                document.getElementById('preferencesBtn').addEventListener('click', showPreferencesModal);
+                document.getElementById('helpCenterBtn').addEventListener('click', function() {
+                    showToast('帮助中心功能开发中', 'info');
+                });
+
+                // 编辑资料弹窗事件
+                document.getElementById('profileForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveProfile();
+                });
+                document.getElementById('cancelProfileBtn').addEventListener('click', hideEditProfileModal);
+
+                // 阅读目标弹窗事件
+                document.getElementById('monthlyGoal').addEventListener('input', updateGoalProgress);
+                document.getElementById('saveGoalsBtn').addEventListener('click', saveReadingGoals);
+                document.getElementById('cancelGoalsBtn').addEventListener('click', hideReadingGoalsModal);
+
+                // 偏好设置弹窗事件
+                document.getElementById('savePrefsBtn').addEventListener('click', savePreferences);
+                document.getElementById('cancelPrefsBtn').addEventListener('click', hidePreferencesModal);
 
                 // 选项卡切换
                 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -708,6 +1053,23 @@
 
             // 初始化
             function init() {
+                // 检查登录状态
+                if (!StorageManager.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // 更新用户信息
+                updateUserInfo();
+                
+                // 更新借阅统计（传递借阅图书列表）
+                const borrowedBooks = StorageManager.getBorrowedBooks();
+                updateBorrowStats(borrowedBooks);
+                
+                // 更新阅读统计数据
+                updateReadingStats();
+                
+                // 设置事件监听器
                 setupEventListeners();
                 
                 // 延迟加载，模拟网络请求
