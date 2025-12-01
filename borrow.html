@@ -390,8 +390,8 @@
 
             // 处理图书借阅
             function handleBorrowBook(bookId) {
-                // 检查用户是否登录
-                if (!StorageManager.isLoggedIn()) {
+                // 检查StorageManager是否存在以及用户是否登录
+                if (!StorageManager || !StorageManager.isLoggedIn()) {
                     showToast('请先登录', 'error');
                     setTimeout(() => {
                         window.location.href = 'login.html';
@@ -400,8 +400,8 @@
                 }
 
                 // 检查用户借阅数量限制
-                const borrowedBooks = StorageManager.getBorrowedBooks();
-                const currentUser = StorageManager.getCurrentUser();
+                const borrowedBooks = StorageManager.getCurrentBorrowedBooks();
+                const currentUser = StorageManager.getUserInfo();
                 const maxBorrowLimit = currentUser && currentUser.userType === 'staff' ? 8 : 5;
                 
                 if (borrowedBooks.length >= maxBorrowLimit) {
