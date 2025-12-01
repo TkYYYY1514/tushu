@@ -125,7 +125,7 @@
                 <img id='userAvatar' src='https://picsum.photos/100/100' alt='用户头像' class='w-full h-full object-cover'>
             </div>
             <div>
-                <h2 id='userName' class='text-xl font-semibold mb-1'>用户名</h2>
+                <h2 id='userName' class='text-xl font-semibold mb-1'>用户昵称</h2>
                 <p id='userType' class='text-white/80 text-sm flex items-center'>
                     <i class='fas fa-user-graduate mr-1'></i>
                     学生
@@ -146,6 +146,10 @@
                 <p class='text-white/80 text-xs'>可续借</p>
             </div>
         </div>
+        <button id='logoutBtn' class='w-full mt-4 bg-white/20 hover:bg-white/30 text-white rounded-lg py-2.5 text-center text-sm font-medium transition-colors'>
+            <i class='fas fa-sign-out-alt mr-1.5'></i>
+            退出登录
+        </button>
     </div>
 
     <!-- 主内容区 -->
@@ -366,7 +370,7 @@
             function updateUserInfo() {
                 const userInfo = StorageManager.getCurrentUser();
                 if (userInfo) {
-                    document.getElementById('userName').textContent = userInfo.name || '用户';
+                    document.getElementById('userName').textContent = userInfo.name || '图书馆用户';
                     document.getElementById('userType').innerHTML = userInfo.type === 'student' 
                         ? '<i class="fas fa-user-graduate mr-1"></i> 学生' 
                         : '<i class="fas fa-briefcase mr-1"></i> 教职工';
@@ -374,6 +378,10 @@
                     if (userInfo.avatar) {
                         document.getElementById('userAvatar').src = userInfo.avatar;
                     }
+                } else {
+                    // 设置友好的默认名称
+                    document.getElementById('userName').textContent = '图书馆用户';
+                    document.getElementById('userType').innerHTML = '<i class="fas fa-user mr-1"></i> 访客';
                 }
             }
 
@@ -639,6 +647,20 @@
                 // 查看历史记录
                 document.getElementById('viewHistoryBtn').addEventListener('click', function() {
                     showToast('历史记录功能开发中', 'info');
+                });
+
+                // 退出登录按钮
+                document.getElementById('logoutBtn').addEventListener('click', function() {
+                    if (confirm('确定要退出登录吗？')) {
+                        // 调用StorageManager的退出登录方法
+                        StorageManager.logout();
+                        // 显示退出成功提示
+                        showToast('退出登录成功');
+                        // 延迟跳转回登录页面
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 1500);
+                    }
                 });
             }
 
