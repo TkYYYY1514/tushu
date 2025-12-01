@@ -328,7 +328,8 @@
                 }
                 
                 books.forEach(book => {
-                    const isBorrowed = StorageManager.isLoggedIn() && StorageManager.isBookBorrowedByUser(book.id);
+                    // 直接检查图书借阅状态，不再需要登录检查
+                    const isBorrowed = StorageManager.isBookBorrowedByUser(book.id);
                     const bookItem = document.createElement('div');
                     bookItem.className = 'book-item animate-fade-in';
                     bookItem.innerHTML = `

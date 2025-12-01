@@ -298,14 +298,7 @@
 
             // 渲染借阅图书列表
             function renderBorrowedBooks() {
-                // 检查用户是否登录
-                if (!StorageManager.isLoggedIn()) {
-                    showToast('请先登录', 'error');
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 1500);
-                    return;
-                }
+                // 已移除登录检查，简化用户体验
 
                 const borrowedBooks = StorageManager.getBorrowedBooks();
                 const borrowedBooksList = document.getElementById('borrowedBooksList');

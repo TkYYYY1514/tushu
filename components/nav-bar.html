@@ -11,7 +11,7 @@
         <i class='fas fa-undo text-lg'></i>
         <span class='text-xs mt-1'>归还</span>
     </a>
-    <a href='../my-books.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='my'>
+    <a href='../my-borrows.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='my'>
         <i class='fas fa-user text-lg'></i>
         <span class='text-xs mt-1'>我的</span>
     </a>
@@ -42,13 +42,29 @@
             setNavBarActive('borrow');
         } else if (currentUrl.includes('return.html')) {
             setNavBarActive('return');
-        } else if (currentUrl.includes('my-books.html')) {
+        } else if (currentUrl.includes('my-borrows.html')) {
             setNavBarActive('my');
         }
     }
     
-    // 当文档加载完成后自动设置激活状态
+    // 为导航项添加点击事件处理
+    function addNavClickHandlers() {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // 获取目标链接
+                const href = this.getAttribute('href');
+                if (href) {
+                    // 使用window.location.href确保页面正确跳转
+                    window.location.href = href;
+                }
+            });
+        });
+    }
+    
+    // 当文档加载完成后初始化导航栏
     document.addEventListener('DOMContentLoaded', function() {
         autoSetActiveNav();
+        addNavClickHandlers();
     });
 </script>

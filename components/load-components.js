@@ -72,7 +72,7 @@ function autoSetActiveNav() {
         setNavBarActive('borrow');
     } else if (currentUrl.includes('return.html')) {
         setNavBarActive('return');
-    } else if (currentUrl.includes('my-books.html')) {
+    } else if (currentUrl.includes('my-borrows.html')) {
         setNavBarActive('my');
     }
 }

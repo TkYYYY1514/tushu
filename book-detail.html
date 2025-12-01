@@ -353,14 +353,7 @@
 
             // 借阅按钮事件
             document.getElementById('borrowBtn').addEventListener('click', function() {
-                // 检查用户是否登录
-                if (!StorageManager.isLoggedIn()) {
-                    showToast('请先登录', 'error');
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 1500);
-                    return;
-                }
+                // 已移除登录检查，简化用户体验
 
                 // 检查图书是否已被当前用户借阅
                 if (StorageManager.isBookBorrowedByUser(bookId)) {
@@ -390,13 +383,12 @@
             function checkAndUpdateBorrowButton() {
                 const borrowBtn = document.getElementById('borrowBtn');
                 
-                if (StorageManager.isLoggedIn()) {
-                    if (StorageManager.isBookBorrowedByUser(bookId)) {
-                        borrowBtn.textContent = '已借阅';
-                        borrowBtn.classList.remove('bg-primary');
-                        borrowBtn.classList.add('bg-gray-400');
-                        borrowBtn.disabled = true;
-                    }
+                // 移除登录检查，直接检查借阅状态
+                if (StorageManager.isBookBorrowedByUser(bookId)) {
+                    borrowBtn.textContent = '已借阅';
+                    borrowBtn.classList.remove('bg-primary');
+                    borrowBtn.classList.add('bg-gray-400');
+                    borrowBtn.disabled = true;
                 }
             }
 

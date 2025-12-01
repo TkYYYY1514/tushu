@@ -1,12 +1,156 @@
 <!DOCTYPE html>
-<html lang='zh-CN'>
+<html lang="zh-CN">
 <head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <!-- 基本元信息 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a7b9d">
+    
+    <!-- 性能优化 -->
+    <meta http-equiv="refresh" content="0;url=books.html">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- 文档信息 -->
     <title>雀语图书馆自助借还系统</title>
-    <meta http-equiv='refresh' content='0;url=启动页.html'>
+    <meta name="description" content="雀语图书馆自助借还系统 - 便捷的图书管理解决方案">
+    <meta name="keywords" content="图书馆,自助借还,图书管理,移动应用">
+    
+    <!-- 样式优化 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 0.5s ease;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        h1 {
+            color: #4a7b9d;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        p {
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        a {
+            display: inline-block;
+            background-color: #4a7b9d;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        a:hover {
+            background-color: #3a5f7d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 123, 157, 0.3);
+        }
+        
+        .loading {
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(74, 123, 157, 0.3);
+            border-radius: 50%;
+            border-top-color: #4a7b9d;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <p>正在跳转到系统启动页... 如果没有自动跳转，请<a href='启动页.html'>点击这里</a></p>
+    <div class="container">
+        <h1>雀语图书馆自助借还系统</h1>
+        <p>正在为您准备系统，请稍候...</p>
+        <a href="books.html" aria-label="进入图书列表">立即进入系统</a>
+        <div class="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+    
+    <!-- 增强用户体验的脚本 -->
+    <script>
+        // 确保页面已完全加载
+        document.addEventListener('DOMContentLoaded', function() {
+            // 如果重定向失败，提供备用机制
+            setTimeout(function() {
+                if (window.location.pathname !== '/books.html' && !window.location.href.includes('books.html')) {
+                    window.location.href = 'books.html';
+                }
+            }, 2000);
+            
+            // 为跳转按钮添加增强功能
+            const redirectButton = document.querySelector('a[href="books.html"]');
+            if (redirectButton) {
+                redirectButton.addEventListener('click', function(e) {
+                    // 防止重复点击
+                    redirectButton.disabled = true;
+                    redirectButton.textContent = '正在跳转...';
+                    
+                    // 添加短暂延迟以显示状态变化
+                    setTimeout(function() {
+                        window.location.href = 'books.html';
+                    }, 300);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

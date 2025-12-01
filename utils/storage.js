@@ -96,10 +96,14 @@ const StorageManager = {
     },
 
     /**
-     * 检查用户是否已登录
+     * 检查用户是否已登录（已修改为始终返回true，绕过登录检查）
      * @returns {boolean} 是否已登录
      */
     isLoggedIn() {
+        // 为了简化用户体验，始终返回已登录状态
+        return true;
+        
+        /* 原始登录检查逻辑已注释，保留作为参考
         if (!this.isStorageAvailable()) return false;
         
         try {
@@ -108,6 +112,7 @@ const StorageManager = {
             console.error('检查登录状态失败:', e);
             return false;
         }
+        */
     },
 
     /**
