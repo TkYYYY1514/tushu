@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>我的借阅 - 雀语图书馆</title>
+    <script src='https://cdn.tailwindcss.com'></script>
+    <link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet' />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        // 清新绿色主色调
+                        secondary: '#10B981',
+                        // 深一点的绿色
+                        accent: '#059669',
+                        // 强调色
+                        light: '#ECFDF5',
+                        // 浅色背景
+                        dark: '#1E293B', // 深色文字
+                        warning: '#FBBF24', // 警告色（逾期）
+                        danger: '#EF4444' // 危险色（严重逾期）
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'scale-in': 'scaleIn 0.3s ease-out forwards',
+                        'pulse-light': 'pulseLight 2s infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': {
+                                opacity: '0'
+                            },
+                            '100%': {
+                                opacity: '1'
+                            }
+                        },
+                        slideUp: {
+                            '0%': {
+                                transform: 'translateY(10px)',
+                                opacity: '0'
+                            },
+                            '100%': {
+                                transform: 'translateY(0)',
+                                opacity: '1'
+                            }
+                        },
+                        scaleIn: {
+                            '0%': {
+                                transform: 'scale(0.98)',
+                                opacity: '0'
+                            },
+                            '100%': {
+                                transform: 'scale(1)',
+                                opacity: '1'
+                            }
+                        },
+                        pulseLight: {
+                            '0%, 100%': {
+                                opacity: '1'
+                            },
+                            '50%': {
+                                opacity: '0.8'
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style type='text/tailwindcss'>
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-green {
+                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+            }
+            .card-shadow {
+                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
+            }
+            .btn-hover {
+                @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300;
+            }
+            .book-item {
+                @apply bg-white rounded-xl p-4 shadow-sm mb-4 transition-all duration-300 hover:shadow-md;
+            }
+            .overdue-warning {
+                @apply bg-warning/10 border-warning/30 text-warning;
+            }
+            .overdue-danger {
+                @apply bg-danger/10 border-danger/30 text-danger;
+            }
+            .on-time {
+                @apply bg-primary/10 border-primary/30 text-primary;
+            }
+            .badge {
+                @apply px-2 py-1 rounded-full text-xs font-medium;
+            }
+        }
+    </style>
+</head>
+<body class='bg-light min-h-screen pb-20'>
+    <!-- 顶部导航栏 -->
+    <header class='sticky top-0 z-30 bg-white shadow-sm py-3 px-4 flex items-center'>
+        <h1 class='text-lg font-medium text-center flex-1'>我的借阅</h1>
+        <button id='settingsBtn' class='w-10 h-10 flex items-center justify-center text-gray-700 rounded-full hover:bg-gray-100 transition-colors'>
+            <i class='fas fa-cog'></i>
+        </button>
+    </header>
+
+    <!-- 用户信息卡片 -->
+    <div class='bg-gradient-green px-5 py-6 text-white mb-6'>
+        <div class='flex items-center'>
+            <div class='w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mr-4 overflow-hidden'>
+                <img id='userAvatar' src='https://picsum.photos/100/100' alt='用户头像' class='w-full h-full object-cover'>
+            </div>
+            <div>
+                <h2 id='userName' class='text-xl font-semibold mb-1'>用户名</h2>
+                <p id='userType' class='text-white/80 text-sm flex items-center'>
+                    <i class='fas fa-user-graduate mr-1'></i>
+                    学生
+                </p>
+            </div>
+        </div>
+        <div class='grid grid-cols-3 gap-4 mt-6'>
+            <div class='text-center'>
+                <p id='borrowCount' class='text-2xl font-bold mb-1'>0</p>
+                <p class='text-white/80 text-xs'>当前借阅</p>
+            </div>
+            <div class='text-center'>
+                <p id='historyCount' class='text-2xl font-bold mb-1'>0</p>
+                <p class='text-white/80 text-xs'>历史借阅</p>
+            </div>
+            <div class='text-center'>
+                <p id='renewCount' class='text-2xl font-bold mb-1'>0</p>
+                <p class='text-white/80 text-xs'>可续借</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class='px-4 py-2'>
+        <!-- 借阅提醒卡片 -->
+        <div id='borrowAlert' class='hidden bg-warning/10 rounded-xl p-4 mb-6 border border-warning/30 animate-pulse-light'>
+            <div class='flex items-start'>
+                <i class='fas fa-exclamation-triangle text-warning mt-0.5 mr-3 text-lg'></i>
+                <div>
+                    <h3 class='text-sm font-medium text-warning mb-1'>您有图书即将到期</h3>
+                    <p id='alertMessage' class='text-xs text-warning/80'>请及时办理续借或归还</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 借阅统计图表（简化版） -->
+        <div class='bg-white rounded-xl p-4 shadow-sm mb-6'>
+            <h3 class='text-base font-medium mb-3'>借阅分布</h3>
+            <div class='flex space-x-2'>
+                <div class='flex-1 bg-primary/10 rounded-lg p-2'>
+                    <div class='h-24 bg-primary/5 rounded-md relative'>
+                        <div class='absolute bottom-0 left-0 right-0 h-3/4 bg-primary rounded-md transition-all duration-1000 ease-out' style='transition-delay: 0.2s'></div>
+                    </div>
+                    <p class='text-xs text-center text-gray-600 mt-1'>文学艺术</p>
+                </div>
+                <div class='flex-1 bg-primary/10 rounded-lg p-2'>
+                    <div class='h-24 bg-primary/5 rounded-md relative'>
+                        <div class='absolute bottom-0 left-0 right-0 h-1/2 bg-primary rounded-md transition-all duration-1000 ease-out' style='transition-delay: 0.4s'></div>
+                    </div>
+                    <p class='text-xs text-center text-gray-600 mt-1'>科学技术</p>
+                </div>
+                <div class='flex-1 bg-primary/10 rounded-lg p-2'>
+                    <div class='h-24 bg-primary/5 rounded-md relative'>
+                        <div class='absolute bottom-0 left-0 right-0 h-1/3 bg-primary rounded-md transition-all duration-1000 ease-out' style='transition-delay: 0.6s'></div>
+                    </div>
+                    <p class='text-xs text-center text-gray-600 mt-1'>生活休闲</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选和排序 -->
+        <div class='flex justify-between items-center mb-4'>
+            <h2 class='text-base font-medium'>借阅列表</h2>
+            <div class='flex space-x-2'>
+                <button id='filterBtn' class='px-3 py-1.5 bg-white rounded-lg text-sm flex items-center text-gray-700 shadow-sm'>
+                    <i class='fas fa-filter mr-1.5'></i>
+                    筛选
+                </button>
+                <button id='sortBtn' class='px-3 py-1.5 bg-white rounded-lg text-sm flex items-center text-gray-700 shadow-sm'>
+                    <i class='fas fa-sort mr-1.5'></i>
+                    排序
+                </button>
+            </div>
+        </div>
+
+        <!-- 借阅状态选项卡 -->
+        <div class='flex bg-white rounded-xl p-1 mb-4 shadow-sm overflow-x-auto hide-scrollbar'>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg bg-primary text-white' data-tab='all'>
+                全部
+            </button>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg text-gray-600' data-tab='normal'>
+                正常
+            </button>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg text-gray-600' data-tab='overdue'>
+                逾期
+            </button>
+            <button class='tab-btn flex-1 py-2 text-center text-sm font-medium rounded-lg text-gray-600' data-tab='renewable'>
+                可续借
+            </button>
+        </div>
+
+        <!-- 借阅图书列表 -->
+        <div id='borrowedBooksList' class='space-y-4'>
+            <!-- 空状态 -->
+            <div id='emptyState' class='text-center py-12 hidden'>
+                <i class='fas fa-book-reader text-gray-300 text-5xl mb-4'></i>
+                <p class='text-gray-500 mb-2'>暂无借阅记录</p>
+                <p class='text-xs text-gray-400'>去借阅一些好书吧！</p>
+                <button id='goBorrowBtn' class='mt-4 px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium'>
+                    去借阅
+                </button>
+            </div>
+            
+            <!-- 加载状态 -->
+            <div id='loadingState' class='space-y-4'>
+                <div class='bg-white rounded-xl p-4 shadow-sm animate-pulse'>
+                    <div class='flex space-x-4'>
+                        <div class='w-16 h-24 bg-gray-100 rounded-lg'></div>
+                        <div class='flex-1 space-y-2'>
+                            <div class='h-5 bg-gray-100 rounded w-3/4'></div>
+                            <div class='h-4 bg-gray-100 rounded w-1/2'></div>
+                            <div class='h-4 bg-gray-100 rounded w-1/3'></div>
+                            <div class='h-4 bg-gray-100 rounded w-1/4'></div>
+                            <div class='flex space-x-2 mt-2'>
+                                <div class='h-8 bg-gray-100 rounded w-1/3'></div>
+                                <div class='h-8 bg-gray-100 rounded w-1/3'></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class='bg-white rounded-xl p-4 shadow-sm animate-pulse'>
+                    <div class='flex space-x-4'>
+                        <div class='w-16 h-24 bg-gray-100 rounded-lg'></div>
+                        <div class='flex-1 space-y-2'>
+                            <div class='h-5 bg-gray-100 rounded w-3/4'></div>
+                            <div class='h-4 bg-gray-100 rounded w-1/2'></div>
+                            <div class='h-4 bg-gray-100 rounded w-1/3'></div>
+                            <div class='h-4 bg-gray-100 rounded w-1/4'></div>
+                            <div class='flex space-x-2 mt-2'>
+                                <div class='h-8 bg-gray-100 rounded w-1/3'></div>
+                                <div class='h-8 bg-gray-100 rounded w-1/3'></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 查看历史记录按钮 -->
+        <button id='viewHistoryBtn' class='w-full py-3 mt-6 bg-white text-primary rounded-xl font-medium text-center border border-primary/30 btn-hover'>
+            查看历史借阅记录
+        </button>
+    </main>
+
+    <!-- 续借确认弹窗 -->
+    <div id='renewModal' class='fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden'>
+        <div class='bg-white rounded-xl w-4/5 max-w-sm p-5 transform transition-all animate-scale-in'>
+            <h3 class='text-lg font-medium text-center mb-4'>确认续借</h3>
+            <p class='text-sm text-gray-600 text-center mb-2'>续借将延长借阅期限30天</p>
+            <p class='text-xs text-gray-500 text-center mb-6'>每本图书最多可续借1次</p>
+            <div class='flex space-x-3'>
+                <button id='cancelRenewBtn' class='flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-center'>
+                    取消
+                </button>
+                <button id='confirmRenewBtn' class='flex-1 py-2.5 bg-primary text-white rounded-lg font-medium text-center btn-hover'>
+                    确认续借
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入存储管理模块 -->
+    <script src='utils/storage.js'></script>
+    <!-- 加载通用底部导航栏 -->
+    <script src='components/load-components.js'></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 当前选中的图书ID
+            let currentBookToRenew = null;
+            // 当前激活的选项卡
+            let activeTab = 'all';
+
+            // 计算借阅状态信息
+            function calculateBorrowInfo(borrowDate, renewCount = 0) {
+                const borrowTime = new Date(borrowDate).getTime();
+                const now = new Date().getTime();
+                // 基础借阅期 + 续借增加的天数
+                const totalBorrowDays = 30 + (renewCount * 30);
+                // 已借阅天数
+                const daysBorrowed = Math.floor((now - borrowTime) / (1000 * 60 * 60 * 24));
+                // 剩余天数
+                const daysLeft = totalBorrowDays - daysBorrowed;
+                // 是否逾期
+                const isOverdue = daysLeft < 0;
+                // 逾期天数
+                const overdueDays = isOverdue ? Math.abs(daysLeft) : 0;
+                // 是否严重逾期（超过10天）
+                const isSeverelyOverdue = overdueDays > 10;
+                // 是否可续借（未逾期且续借次数小于1）
+                const canRenew = !isOverdue && renewCount < 1;
+                // 是否即将到期（剩余天数小于7天）
+                const isSoonDue = !isOverdue && daysLeft > 0 && daysLeft <= 7;
+                
+                // 计算归还日期
+                const returnDate = new Date(borrowTime + totalBorrowDays * 24 * 60 * 60 * 1000);
+                
+                return {
+                    daysBorrowed,
+                    daysLeft,
+                    totalBorrowDays,
+                    overdueDays,
+                    isOverdue,
+                    isSeverelyOverdue,
+                    canRenew,
+                    isSoonDue,
+                    returnDate,
+                    renewCount
+                };
+            }
+
+            // 格式化日期
+            function formatDate(date) {
+                const d = new Date(date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // 获取状态类名
+            function getStatusClass(borrowInfo) {
+                if (borrowInfo.isOverdue) {
+                    return borrowInfo.isSeverelyOverdue ? 'overdue-danger' : 'overdue-warning';
+                }
+                return borrowInfo.isSoonDue ? 'overdue-warning' : 'on-time';
+            }
+
+            // 获取状态文本
+            function getStatusText(borrowInfo) {
+                if (borrowInfo.isOverdue) {
+                    return `逾期 ${borrowInfo.overdueDays} 天`;
+                }
+                return `剩余 ${borrowInfo.daysLeft} 天`;
+            }
+
+            // 更新用户信息
+            function updateUserInfo() {
+                const userInfo = StorageManager.getCurrentUser();
+                if (userInfo) {
+                    document.getElementById('userName').textContent = userInfo.name || '用户';
+                    document.getElementById('userType').innerHTML = userInfo.type === 'student' 
+                        ? '<i class="fas fa-user-graduate mr-1"></i> 学生' 
+                        : '<i class="fas fa-briefcase mr-1"></i> 教职工';
+                    // 如果有头像URL则更新，否则使用默认头像
+                    if (userInfo.avatar) {
+                        document.getElementById('userAvatar').src = userInfo.avatar;
+                    }
+                }
+            }
+
+            // 更新借阅统计
+            function updateBorrowStats(borrowedBooks) {
+                const borrowCount = borrowedBooks.length;
+                const historyCount = StorageManager.getHistoryBooks().length;
+                const renewableCount = borrowedBooks.filter(book => {
+                    const borrowInfo = calculateBorrowInfo(book.borrowDate, book.renewCount || 0);
+                    return borrowInfo.canRenew;
+                }).length;
+
+                document.getElementById('borrowCount').textContent = borrowCount;
+                document.getElementById('historyCount').textContent = historyCount;
+                document.getElementById('renewCount').textContent = renewableCount;
+
+                // 检查是否有即将到期的图书
+                const hasSoonDueBooks = borrowedBooks.some(book => {
+                    const borrowInfo = calculateBorrowInfo(book.borrowDate, book.renewCount || 0);
+                    return borrowInfo.isSoonDue;
+                });
+
+                if (hasSoonDueBooks) {
+                    const borrowAlert = document.getElementById('borrowAlert');
+                    borrowAlert.classList.remove('hidden');
+                    
+                    // 计算最近到期的图书
+                    let minDaysLeft = 30;
+                    borrowedBooks.forEach(book => {
+                        const borrowInfo = calculateBorrowInfo(book.borrowDate, book.renewCount || 0);
+                        if (borrowInfo.isSoonDue && borrowInfo.daysLeft < minDaysLeft) {
+                            minDaysLeft = borrowInfo.daysLeft;
+                        }
+                    });
+                    
+                    document.getElementById('alertMessage').textContent = `最近有图书将在${minDaysLeft}天后到期，请及时办理续借`;
+                } else {
+                    document.getElementById('borrowAlert').classList.add('hidden');
+                }
+            }
+
+            // 根据选项卡筛选图书
+            function filterBooksByTab(books, tab) {
+                if (tab === 'all') return books;
+                
+                return books.filter(book => {
+                    const borrowInfo = calculateBorrowInfo(book.borrowDate, book.renewCount || 0);
+                    switch(tab) {
+                        case 'normal':
+                            return !borrowInfo.isOverdue && !borrowInfo.isSoonDue;
+                        case 'overdue':
+                            return borrowInfo.isOverdue;
+                        case 'renewable':
+                            return borrowInfo.canRenew;
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            // 渲染借阅图书列表
+            function renderBorrowedBooks() {
+                // 检查用户是否登录
+                if (!StorageManager.isLoggedIn()) {
+                    showToast('请先登录', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                    return;
+                }
+
+                const borrowedBooks = StorageManager.getBorrowedBooks();
+                const filteredBooks = filterBooksByTab(borrowedBooks, activeTab);
+                const borrowedBooksList = document.getElementById('borrowedBooksList');
+                const emptyState = document.getElementById('emptyState');
+                const loadingState = document.getElementById('loadingState');
+                
+                // 隐藏加载状态
+                loadingState.classList.add('hidden');
+
+                // 更新用户信息和统计
+                updateUserInfo();
+                updateBorrowStats(borrowedBooks);
+
+                if (filteredBooks.length === 0) {
+                    // 显示空状态
+                    emptyState.classList.remove('hidden');
+                    borrowedBooksList.innerHTML = '';
+                } else {
+                    // 隐藏空状态，显示列表
+                    emptyState.classList.add('hidden');
+
+                    // 清空列表
+                    borrowedBooksList.innerHTML = '';
+                    
+                    // 添加图书项
+                    filteredBooks.forEach(book => {
+                        const borrowInfo = calculateBorrowInfo(book.borrowDate, book.renewCount || 0);
+                        const statusClass = getStatusClass(borrowInfo);
+                        const statusText = getStatusText(borrowInfo);
+                        
+                        const bookItem = document.createElement('div');
+                        bookItem.className = 'book-item animate-fade-in';
+                        bookItem.setAttribute('data-id', book.id);
+                        bookItem.innerHTML = `
+                            <div class='flex space-x-4'>
+                                <div class='w-16 h-24 bg-gray-100 rounded-lg overflow-hidden shadow-sm flex-shrink-0'>
+                                    <img src='${book.cover}' alt='${book.title}' class='w-full h-full object-cover'>
+                                </div>
+                                <div class='flex-1 flex flex-col justify-between'>
+                                    <div>
+                                        <h3 class='text-base font-medium mb-1 truncate'>${book.title}</h3>
+                                        <p class='text-gray-600 text-sm mb-1'>${book.author}</p>
+                                        <div class='flex items-center mb-1'>
+                                            <span class='text-xs px-2 py-1 rounded-full ${statusClass}'>${statusText}</span>
+                                            ${book.renewCount > 0 ? 
+                                                `<span class='text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-2'>已续借</span>` : ''
+                                            }
+                                        </div>
+                                        <div class='flex flex-col text-xs text-gray-500'>
+                                            <span>借阅日期: ${formatDate(book.borrowDate)}</span>
+                                            <span>到期日期: ${formatDate(borrowInfo.returnDate)}</span>
+                                        </div>
+                                    </div>
+                                    <div class='flex space-x-2 mt-2'>
+                                        <button class='detail-btn py-1.5 bg-white border border-primary text-primary rounded-lg text-sm font-medium text-center flex-1 btn-hover' data-id='${book.id}'>
+                                            详情
+                                        </button>
+                                        <button class='renew-btn py-1.5 ${borrowInfo.canRenew ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'} rounded-lg text-sm font-medium text-center flex-1 ${borrowInfo.canRenew ? 'btn-hover' : ''}' data-id='${book.id}' ${!borrowInfo.canRenew ? 'disabled' : ''}>
+                                            续借
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        borrowedBooksList.appendChild(bookItem);
+                    });
+
+                    // 添加事件监听器
+                    attachEventListeners();
+                }
+            }
+
+            // 添加事件监听器
+            function attachEventListeners() {
+                // 详情按钮事件
+                document.querySelectorAll('.detail-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookId = parseInt(this.getAttribute('data-id'));
+                        window.location.href = `book-detail.html?id=${bookId}`;
+                    });
+                });
+
+                // 续借按钮事件
+                document.querySelectorAll('.renew-btn:not(:disabled)').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookId = parseInt(this.getAttribute('data-id'));
+                        showRenewModal(bookId);
+                    });
+                });
+            }
+
+            // 显示续借确认弹窗
+            function showRenewModal(bookId) {
+                currentBookToRenew = bookId;
+                const modal = document.getElementById('renewModal');
+                modal.classList.remove('hidden');
+            }
+
+            // 隐藏续借确认弹窗
+            function hideRenewModal() {
+                const modal = document.getElementById('renewModal');
+                modal.classList.add('hidden');
+                currentBookToRenew = null;
+            }
+
+            // 处理图书续借
+            function handleRenewBook(bookId) {
+                if (StorageManager.renewBook(bookId)) {
+                    showToast('续借成功！');
+                    // 重新渲染列表
+                    setTimeout(() => {
+                        renderBorrowedBooks();
+                    }, 1500);
+                } else {
+                    showToast('续借失败，请稍后重试', 'error');
+                }
+            }
+
+            // 切换选项卡
+            function switchTab(tab) {
+                activeTab = tab;
+                // 更新选项卡样式
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.getAttribute('data-tab') === tab) {
+                        btn.classList.remove('text-gray-600');
+                        btn.classList.add('bg-primary', 'text-white');
+                    } else {
+                        btn.classList.remove('bg-primary', 'text-white');
+                        btn.classList.add('text-gray-600');
+                    }
+                });
+                // 重新渲染列表
+                renderBorrowedBooks();
+            }
+
+            // Toast提示函数
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : type === 'info' ? 'bg-blue-500' : 'bg-primary'} transition-opacity duration-300 z-50`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 2000);
+            }
+
+            // 事件监听器设置
+            function setupEventListeners() {
+                // 设置按钮
+                document.getElementById('settingsBtn').addEventListener('click', function() {
+                    showToast('设置功能开发中', 'info');
+                });
+
+                // 去借阅按钮
+                document.getElementById('goBorrowBtn').addEventListener('click', function() {
+                    window.location.href = 'borrow.html';
+                });
+
+                // 筛选按钮
+                document.getElementById('filterBtn').addEventListener('click', function() {
+                    showToast('筛选功能开发中', 'info');
+                });
+
+                // 排序按钮
+                document.getElementById('sortBtn').addEventListener('click', function() {
+                    showToast('排序功能开发中', 'info');
+                });
+
+                // 选项卡切换
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const tab = this.getAttribute('data-tab');
+                        switchTab(tab);
+                    });
+                });
+
+                // 取消续借
+                document.getElementById('cancelRenewBtn').addEventListener('click', hideRenewModal);
+
+                // 确认续借
+                document.getElementById('confirmRenewBtn').addEventListener('click', function() {
+                    if (currentBookToRenew !== null) {
+                        handleRenewBook(currentBookToRenew);
+                        hideRenewModal();
+                    }
+                });
+
+                // 查看历史记录
+                document.getElementById('viewHistoryBtn').addEventListener('click', function() {
+                    showToast('历史记录功能开发中', 'info');
+                });
+            }
+
+            // 初始化
+            function init() {
+                setupEventListeners();
+                
+                // 延迟加载，模拟网络请求
+                setTimeout(() => {
+                    renderBorrowedBooks();
+                }, 1000);
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>

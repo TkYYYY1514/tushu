@@ -1,0 +1,54 @@
+<div class='fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 z-50 flex items-center justify-around'>
+    <a href='../books.html' class='nav-item flex flex-col items-center justify-center text-primary' data-target='books'>
+        <i class='fas fa-book text-lg'></i>
+        <span class='text-xs mt-1'>图书</span>
+    </a>
+    <a href='../borrow.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='borrow'>
+        <i class='fas fa-book-open text-lg'></i>
+        <span class='text-xs mt-1'>借阅</span>
+    </a>
+    <a href='../return.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='return'>
+        <i class='fas fa-undo text-lg'></i>
+        <span class='text-xs mt-1'>归还</span>
+    </a>
+    <a href='../my-books.html' class='nav-item flex flex-col items-center justify-center text-gray-500' data-target='my'>
+        <i class='fas fa-user text-lg'></i>
+        <span class='text-xs mt-1'>我的</span>
+    </a>
+</div>
+
+<script>
+    // 导航栏激活状态设置函数
+    function setNavBarActive(targetPage) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            const target = item.getAttribute('data-target');
+            if (target === targetPage) {
+                item.classList.add('text-primary');
+                item.classList.remove('text-gray-500');
+            } else {
+                item.classList.remove('text-primary');
+                item.classList.add('text-gray-500');
+            }
+        });
+    }
+    
+    // 自动检测当前页面并设置激活状态
+    function autoSetActiveNav() {
+        const currentUrl = window.location.pathname;
+        if (currentUrl.includes('books.html')) {
+            setNavBarActive('books');
+        } else if (currentUrl.includes('borrow.html')) {
+            setNavBarActive('borrow');
+        } else if (currentUrl.includes('return.html')) {
+            setNavBarActive('return');
+        } else if (currentUrl.includes('my-books.html')) {
+            setNavBarActive('my');
+        }
+    }
+    
+    // 当文档加载完成后自动设置激活状态
+    document.addEventListener('DOMContentLoaded', function() {
+        autoSetActiveNav();
+    });
+</script>

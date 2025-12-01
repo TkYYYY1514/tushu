@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>登录 - 雀语图书馆</title>
+    <script src='https://cdn.tailwindcss.com'></script>
+    <link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet' />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        // 清新绿色主色调
+                        secondary: '#10B981',
+                        // 深一点的绿色
+                        accent: '#059669',
+                        // 强调色
+                        light: '#ECFDF5',
+                        // 浅色背景
+                        dark: '#1E293B' // 深色文字
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s ease-out forwards',
+                        'scale-in': 'scaleIn 0.5s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': {
+                                opacity: '0'
+                            },
+                            '100%': {
+                                opacity: '1'
+                            }
+                        },
+                        slideUp: {
+                            '0%': {
+                                transform: 'translateY(20px)',
+                                opacity: '0'
+                            },
+                            '100%': {
+                                transform: 'translateY(0)',
+                                opacity: '1'
+                            }
+                        },
+                        scaleIn: {
+                            '0%': {
+                                transform: 'scale(0.95)',
+                                opacity: '0'
+                            },
+                            '100%': {
+                                transform: 'scale(1)',
+                                opacity: '1'
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style type='text/tailwindcss'>
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-green {
+                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+            }
+            .card-shadow {
+                box-shadow: 0 10px 25px -5px rgba(52, 211, 153, 0.1), 0 8px 10px -6px rgba(52, 211, 153, 0.1);
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none;
+            }
+            .btn-hover {
+                @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300;
+            }
+        }
+    </style>
+</head>
+<body class='bg-light min-h-screen flex flex-col'>
+    <!-- 引入存储管理模块 -->
+    <script src='utils/storage.js'></script>
+    <!-- 主容器 -->
+    <div class='flex-1 flex flex-col items-center justify-center px-6 py-12'>
+        <!-- Logo和标题区域 -->
+        <div class='mb-10 text-center opacity-0 animate-slide-up' style='animation-delay: 0.3s;'>
+            <div class='relative w-28 h-28 mx-auto mb-6 bg-gradient-green rounded-xl shadow-lg flex items-center justify-center'>
+                <i class='fas fa-dove text-white text-4xl'></i>
+                <div class='absolute top-1/2 left-1/2 transform translate-x-3 translate-y-1 bg-white/20 backdrop-blur-sm rounded-full p-1.5 shadow-md'>
+                    <i class='fas fa-book text-white'></i>
+                </div>
+            </div>
+            <h1 class='text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2'>
+                雀语<span class='text-primary'>图书馆</span>
+            </h1>
+            <p class='text-gray-600 text-sm md:text-base max-w-xs mx-auto'>
+                欢迎回来，请登录您的账号
+            </p>
+        </div>
+
+        <!-- 登录表单卡片 -->
+        <div class='w-full max-w-md bg-white rounded-2xl card-shadow p-6 md:p-8 opacity-0 animate-scale-in' style='animation-delay: 0.5s;'>
+            <form id='loginForm' class='space-y-6'>
+                <!-- 账号输入 -->
+                <div class='space-y-2'>
+                    <label for='account' class='block text-gray-700 font-medium text-sm'>学号/工号</label>
+                    <div class='relative'>
+                        <div class='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                            <i class='fas fa-id-card text-gray-400'></i>
+                        </div>
+                        <input 
+                            type='text' 
+                            id='account' 
+                            class='w-full py-3 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-xl input-focus' 
+                            placeholder='请输入学号或工号'
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- 密码输入 -->
+                <div class='space-y-2'>
+                    <label for='password' class='block text-gray-700 font-medium text-sm'>密码</label>
+                    <div class='relative'>
+                        <div class='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                            <i class='fas fa-lock text-gray-400'></i>
+                        </div>
+                        <input 
+                            type='password' 
+                            id='password' 
+                            class='w-full py-3 pl-10 pr-10 bg-gray-50 border border-gray-200 rounded-xl input-focus' 
+                            placeholder='请输入密码'
+                            required
+                        >
+                        <div class='absolute inset-y-0 right-0 pr-3 flex items-center'>
+                            <button type='button' id='togglePassword' class='text-gray-400 hover:text-gray-600'>
+                                <i class='fas fa-eye-slash'></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 记住密码和忘记密码 -->
+                <div class='flex items-center justify-between'>
+                    <label class='flex items-center cursor-pointer'>
+                        <input type='checkbox' id='rememberMe' class='sr-only peer'>
+                        <div class='w-5 h-5 bg-gray-100 rounded border border-gray-300 peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center transition-all duration-300'>
+                            <i class='fas fa-check text-white text-xs opacity-0 peer-checked:opacity-100'></i>
+                        </div>
+                        <span class='ml-2 text-sm text-gray-600'>记住我</span>
+                    </label>
+                    <a href='#' class='text-sm text-primary hover:text-accent transition-colors'>忘记密码？</a>
+                </div>
+
+                <!-- 登录按钮 -->
+                <button 
+                    type='submit' 
+                    class='w-full bg-gradient-green text-white font-medium py-3 px-4 rounded-xl btn-hover flex items-center justify-center'
+                >
+                    <span>登录</span>
+                </button>
+            </form>
+
+            <!-- 注册入口 -->
+            <div class='mt-6 text-center'>
+                <p class='text-gray-600 text-sm'>
+                    还没有账号？<a href='register.html' class='text-primary font-medium hover:text-accent transition-colors'>立即注册</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- 其他登录方式 -->
+        <div class='mt-8 text-center opacity-0 animate-fade-in' style='animation-delay: 0.7s;'>
+            <p class='text-sm text-gray-500 mb-4 relative inline-block'>
+                <span class='relative z-10 px-4 bg-light'>其他登录方式</span>
+                <span class='absolute bottom-0 left-0 w-full h-px bg-gray-200 -z-0'></span>
+            </p>
+            <div class='flex justify-center space-x-6'>
+                <a href='#' class='w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors'>
+                    <i class='fab fa-weixin text-xl'></i>
+                </a>
+                <a href='#' class='w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors'>
+                    <i class='fab fa-qq text-xl'></i>
+                </a>
+                <a href='#' class='w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors'>
+                    <i class='fab fa-weibo text-xl'></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部信息 -->
+    <div class='py-6 text-center text-gray-500 text-xs'>
+        <p>© 2025 雀语图书馆 版权所有</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示/隐藏密码
+            const togglePassword = document.getElementById('togglePassword');
+            const password = document.getElementById('password');
+
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // 切换图标
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+
+            // 登录表单处理
+        const loginForm = document.getElementById('loginForm');
+        const rememberMe = document.getElementById('rememberMe');
+        
+        function showToast(message, type = 'success') {
+            // 简单的Toast实现
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} transition-opacity duration-300`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 2000);
+        }
+        
+        function validateForm() {
+            const account = document.getElementById('account').value;
+            const password = document.getElementById('password').value;
+            
+            if (!account.trim()) {
+                showToast('请输入学号/工号', 'error');
+                return false;
+            }
+            
+            if (!password) {
+                showToast('请输入密码', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const account = document.getElementById('account').value;
+            const password = document.getElementById('password').value;
+            
+            // 表单验证
+            if (!validateForm()) {
+                return;
+            }
+            
+            // 使用存储管理器验证用户
+            const storedUserInfo = StorageManager ? StorageManager.getUserInfo() : null;
+            
+            if (storedUserInfo && storedUserInfo.account === account && storedUserInfo.password === password) {
+                // 登录成功，更新登录状态
+                if (StorageManager) {
+                    StorageManager.saveUserInfo(storedUserInfo);
+                }
+                
+                // 显示成功提示
+                showToast('登录成功！');
+                
+                // 保存登录状态（如果选择记住我）
+                if (rememberMe.checked) {
+                    localStorage.setItem('library_remember_me', 'true');
+                } else {
+                    localStorage.removeItem('library_remember_me');
+                }
+                
+                // 跳转到图书列表页面
+                setTimeout(() => {
+                    window.location.href = 'books.html';
+                }, 1500);
+            } else {
+                // 登录失败
+                showToast('账号或密码错误', 'error');
+            }
+        });
+
+            // 为所有输入框添加动画效果
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('scale-[1.02]');
+                    this.parentElement.style.transition = 'transform 0.2s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('scale-[1.02]');
+                });
+            });
+
+            // 检查是否有记住的账号
+            if (localStorage.getItem('rememberAccount') === 'true' && localStorage.getItem('userAccount')) {
+                document.getElementById('account').value = localStorage.getItem('userAccount');
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>图书借阅 - 雀语图书馆</title>
+    <script src='https://cdn.tailwindcss.com'></script>
+    <link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet' />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        // 清新绿色主色调
+                        secondary: '#10B981',
+                        // 深一点的绿色
+                        accent: '#059669',
+                        // 强调色
+                        light: '#ECFDF5',
+                        // 浅色背景
+                        dark: '#1E293B' // 深色文字
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'scale-in': 'scaleIn 0.3s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': {
+                                opacity: '0'
+                            },
+                            '100%': {
+                                opacity: '1'
+                            }
+                        },
+                        slideUp: {
+                            '0%': {
+                                transform: 'translateY(10px)',
+                                opacity: '0'
+                            },
+                            '100%': {
+                                transform: 'translateY(0)',
+                                opacity: '1'
+                            }
+                        },
+                        scaleIn: {
+                            '0%': {
+                                transform: 'scale(0.98)',
+                                opacity: '0'
+                            },
+                            '100%': {
+                                transform: 'scale(1)',
+                                opacity: '1'
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style type='text/tailwindcss'>
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-green {
+                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+            }
+            .card-shadow {
+                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
+            }
+            .btn-hover {
+                @apply hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300;
+            }
+            .book-item {
+                @apply bg-white rounded-xl p-4 shadow-sm mb-4 transition-all duration-300 hover:shadow-md;
+            }
+            .skeleton-loading {
+                @apply animate-pulse bg-gray-200 rounded;
+            }
+        }
+    </style>
+</head>
+<body class='bg-light min-h-screen pb-20'>
+    <!-- 顶部导航栏 -->
+    <header class='sticky top-0 z-30 bg-white shadow-sm py-3 px-4 flex items-center'>
+        <button id='backBtn' class='w-10 h-10 flex items-center justify-center text-gray-700 rounded-full hover:bg-gray-100 transition-colors'>
+            <i class='fas fa-arrow-left'></i>
+        </button>
+        <h1 class='text-lg font-medium text-center flex-1'>图书借阅</h1>
+        <div class='w-10'></div> <!-- 占位，保持标题居中 -->
+    </header>
+
+    <!-- 主内容区 -->
+    <main class='px-4 py-5'>
+        <!-- 搜索栏 -->
+        <div class='relative mb-6'>
+            <input 
+                type='text' 
+                id='searchInput' 
+                placeholder='搜索图书名称、作者或ISBN...' 
+                class='w-full bg-white rounded-full py-3 px-5 pr-12 text-sm border border-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
+            >
+            <i class='fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400'></i>
+        </div>
+
+        <!-- 筛选条件 -->
+        <div class='bg-white rounded-xl p-4 mb-6 shadow-sm'>
+            <div class='flex justify-between items-center mb-4'>
+                <h2 class='text-base font-medium'>筛选条件</h2>
+                <button id='resetFilterBtn' class='text-primary text-sm'>重置</button>
+            </div>
+            
+            <!-- 分类筛选 -->
+            <div class='mb-4'>
+                <h3 class='text-sm text-gray-600 mb-2'>分类</h3>
+                <div class='flex flex-wrap gap-2'>
+                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-primary text-white' data-category='all'>全部</button>
+                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='literature'>文学艺术</button>
+                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='science'>科学技术</button>
+                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='history'>历史地理</button>
+                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='biography'>人物传记</button>
+                    <button class='category-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-category='sci-fi'>科幻小说</button>
+                </div>
+            </div>
+
+            <!-- 排序方式 -->
+            <div>
+                <h3 class='text-sm text-gray-600 mb-2'>排序方式</h3>
+                <div class='flex flex-wrap gap-2'>
+                    <button class='sort-filter px-3 py-1 rounded-full text-xs bg-primary text-white' data-sort='newest'>最新上架</button>
+                    <button class='sort-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-sort='rating'>评分最高</button>
+                    <button class='sort-filter px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600' data-sort='stock'>库存最多</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 借阅规则说明 -->
+        <div class='bg-primary/5 rounded-xl p-4 mb-6 border border-primary/20'>
+            <h3 class='text-sm font-medium text-primary mb-2 flex items-center'>
+                <i class='fas fa-info-circle mr-2'></i>
+                借阅规则
+            </h3>
+            <ul class='text-xs text-gray-600 space-y-1'>
+                <li>• 学生用户最多可同时借阅5本图书，教职工用户最多可同时借阅8本图书</li>
+                <li>• 借阅期限为30天，可续借一次，续期15天</li>
+                <li>• 逾期未还将收取0.5元/天/本的罚款</li>
+                <li>• 图书归还时请确保完好无损，如有损坏将按原价赔偿</li>
+            </ul>
+        </div>
+
+        <!-- 图书列表 -->
+        <div class='mb-8'>
+            <h2 class='text-base font-medium mb-4'>可借阅图书</h2>
+            <div id='bookList' class='space-y-4'>
+                <!-- 图书项将通过JavaScript动态生成 -->
+                <!-- 加载状态 -->
+                <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 引入存储管理模块 -->
+    <script src='utils/storage.js'></script>
+    <!-- 加载通用底部导航栏 -->
+    <script src='components/load-components.js'></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟图书数据
+            const mockBooks = [
+                {
+                    id: 1,
+                    title: '活着',
+                    author: '余华',
+                    cover: 'https://picsum.photos/id/24/300/450',
+                    rating: 9.4,
+                    stock: 23,
+                    category: 'literature',
+                    publishDate: '2011-05',
+                    isbn: '9787544243088'
+                },
+                {
+                    id: 2,
+                    title: '三体',
+                    author: '刘慈欣',
+                    cover: 'https://picsum.photos/id/20/300/450',
+                    rating: 9.2,
+                    stock: 18,
+                    category: 'sci-fi',
+                    publishDate: '2008-01',
+                    isbn: '9787536692930'
+                },
+                {
+                    id: 3,
+                    title: '解忧杂货店',
+                    author: '东野圭吾',
+                    cover: 'https://picsum.photos/id/22/300/450',
+                    rating: 8.9,
+                    stock: 25,
+                    category: 'literature',
+                    publishDate: '2014-05',
+                    isbn: '9787544270878'
+                },
+                {
+                    id: 4,
+                    title: '人类简史',
+                    author: '尤瓦尔·赫拉利',
+                    cover: 'https://picsum.photos/id/18/300/450',
+                    rating: 9.1,
+                    stock: 15,
+                    category: 'history',
+                    publishDate: '2014-11',
+                    isbn: '9787508647357'
+                },
+                {
+                    id: 5,
+                    title: '爱因斯坦传',
+                    author: '沃尔特·艾萨克森',
+                    cover: 'https://picsum.photos/id/19/300/450',
+                    rating: 8.8,
+                    stock: 10,
+                    category: 'biography',
+                    publishDate: '2012-03',
+                    isbn: '9787544257497'
+                },
+                {
+                    id: 6,
+                    title: '深度学习',
+                    author: '伊恩·古德费洛',
+                    cover: 'https://picsum.photos/id/17/300/450',
+                    rating: 9.0,
+                    stock: 8,
+                    category: 'science',
+                    publishDate: '2017-08',
+                    isbn: '9787115461740'
+                },
+                {
+                    id: 7,
+                    title: '围城',
+                    author: '钱钟书',
+                    cover: 'https://picsum.photos/id/21/300/450',
+                    rating: 9.3,
+                    stock: 20,
+                    category: 'literature',
+                    publishDate: '1991-02',
+                    isbn: '9787020002207'
+                },
+                {
+                    id: 8,
+                    title: '百年孤独',
+                    author: '加西亚·马尔克斯',
+                    cover: 'https://picsum.photos/id/23/300/450',
+                    rating: 9.5,
+                    stock: 12,
+                    category: 'literature',
+                    publishDate: '2011-06',
+                    isbn: '9787544243019'
+                }
+            ];
+
+            // 当前筛选条件
+            let currentFilters = {
+                search: '',
+                category: 'all',
+                sort: 'newest'
+            };
+
+            // 过滤和排序图书
+            function filterAndSortBooks(books) {
+                let filtered = [...books];
+                
+                // 搜索过滤
+                if (currentFilters.search) {
+                    const searchLower = currentFilters.search.toLowerCase();
+                    filtered = filtered.filter(book => 
+                        book.title.toLowerCase().includes(searchLower) ||
+                        book.author.toLowerCase().includes(searchLower) ||
+                        book.isbn.includes(searchLower)
+                    );
+                }
+                
+                // 分类过滤
+                if (currentFilters.category !== 'all') {
+                    filtered = filtered.filter(book => book.category === currentFilters.category);
+                }
+                
+                // 排序
+                switch (currentFilters.sort) {
+                    case 'rating':
+                        filtered.sort((a, b) => b.rating - a.rating);
+                        break;
+                    case 'stock':
+                        filtered.sort((a, b) => b.stock - a.stock);
+                        break;
+                    case 'newest':
+                    default:
+                        filtered.sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate));
+                        break;
+                }
+                
+                return filtered;
+            }
+
+            // 渲染图书列表
+            function renderBookList(books) {
+                const bookListElement = document.getElementById('bookList');
+                bookListElement.innerHTML = '';
+                
+                if (books.length === 0) {
+                    bookListElement.innerHTML = `
+                        <div class='text-center py-10'>
+                            <i class='fas fa-book-open text-gray-300 text-5xl mb-4'></i>
+                            <p class='text-gray-500'>没有找到符合条件的图书</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                books.forEach(book => {
+                    const isBorrowed = StorageManager.isLoggedIn() && StorageManager.isBookBorrowedByUser(book.id);
+                    const bookItem = document.createElement('div');
+                    bookItem.className = 'book-item animate-fade-in';
+                    bookItem.innerHTML = `
+                        <div class='flex space-x-4'>
+                            <div class='w-16 h-24 bg-gray-100 rounded-lg overflow-hidden shadow-sm flex-shrink-0'>
+                                <img src='${book.cover}' alt='${book.title}' class='w-full h-full object-cover'>
+                            </div>
+                            <div class='flex-1 flex flex-col justify-between'>
+                                <div>
+                                    <h3 class='text-base font-medium mb-1 truncate'>${book.title}</h3>
+                                    <p class='text-gray-600 text-sm mb-1'>${book.author}</p>
+                                    <div class='flex items-center mb-1'>
+                                        <span class='text-primary text-sm mr-4'>评分 ${book.rating}</span>
+                                        <span class='text-gray-500 text-xs'>库存 ${book.stock}</span>
+                                    </div>
+                                    <div class='flex items-center'>
+                                        <span class='text-gray-500 text-xs'>${book.category === 'literature' ? '文学艺术' : 
+                                                                          book.category === 'science' ? '科学技术' : 
+                                                                          book.category === 'history' ? '历史地理' : 
+                                                                          book.category === 'biography' ? '人物传记' : '科幻小说'}</span>
+                                    </div>
+                                </div>
+                                <div class='flex space-x-2 mt-2'>
+                                    <button class='details-btn flex-1 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium text-center' data-id='${book.id}'>
+                                        查看详情
+                                    </button>
+                                    <button class='borrow-btn py-1.5 ${isBorrowed ? 'bg-gray-400' : 'bg-primary'} text-white rounded-lg text-sm font-medium text-center' data-id='${book.id}' ${isBorrowed ? 'disabled' : ''}>
+                                        ${isBorrowed ? '已借阅' : '借阅'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    bookListElement.appendChild(bookItem);
+                });
+                
+                // 添加事件监听器
+                attachEventListeners();
+            }
+
+            // 添加事件监听器
+            function attachEventListeners() {
+                // 查看详情按钮
+                document.querySelectorAll('.details-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookId = this.getAttribute('data-id');
+                        window.location.href = `book-detail.html?id=${bookId}`;
+                    });
+                });
+                
+                // 借阅按钮
+                document.querySelectorAll('.borrow-btn:not(:disabled)').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const bookId = parseInt(this.getAttribute('data-id'));
+                        handleBorrowBook(bookId);
+                    });
+                });
+            }
+
+            // 处理图书借阅
+            function handleBorrowBook(bookId) {
+                // 检查用户是否登录
+                if (!StorageManager.isLoggedIn()) {
+                    showToast('请先登录', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                    return;
+                }
+
+                // 检查用户借阅数量限制
+                const borrowedBooks = StorageManager.getBorrowedBooks();
+                const currentUser = StorageManager.getCurrentUser();
+                const maxBorrowLimit = currentUser && currentUser.userType === 'staff' ? 8 : 5;
+                
+                if (borrowedBooks.length >= maxBorrowLimit) {
+                    showToast(`已达到借阅上限(${maxBorrowLimit}本)`, 'error');
+                    return;
+                }
+
+                // 检查图书是否已被当前用户借阅
+                if (StorageManager.isBookBorrowedByUser(bookId)) {
+                    showToast('您已借阅过这本书', 'info');
+                    return;
+                }
+
+                // 获取图书信息
+                const book = mockBooks.find(b => b.id === bookId);
+                if (!book) {
+                    showToast('图书信息不存在', 'error');
+                    return;
+                }
+
+                // 添加借阅记录
+                if (StorageManager.addBorrowRecord({
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    cover: book.cover
+                })) {
+                    showToast('借阅成功！');
+                    // 更新按钮状态
+                    const borrowBtn = document.querySelector(`.borrow-btn[data-id='${bookId}']`);
+                    if (borrowBtn) {
+                        borrowBtn.textContent = '已借阅';
+                        borrowBtn.classList.remove('bg-primary');
+                        borrowBtn.classList.add('bg-gray-400');
+                        borrowBtn.disabled = true;
+                    }
+                } else {
+                    showToast('借阅失败，请稍后重试', 'error');
+                }
+            }
+
+            // 初始化筛选按钮
+            function initFilterButtons() {
+                // 分类筛选按钮
+                document.querySelectorAll('.category-filter').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.category-filter').forEach(b => {
+                            b.classList.remove('bg-primary', 'text-white');
+                            b.classList.add('bg-gray-100', 'text-gray-600');
+                        });
+                        this.classList.remove('bg-gray-100', 'text-gray-600');
+                        this.classList.add('bg-primary', 'text-white');
+                        currentFilters.category = this.getAttribute('data-category');
+                        updateBookList();
+                    });
+                });
+                
+                // 排序筛选按钮
+                document.querySelectorAll('.sort-filter').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.sort-filter').forEach(b => {
+                            b.classList.remove('bg-primary', 'text-white');
+                            b.classList.add('bg-gray-100', 'text-gray-600');
+                        });
+                        this.classList.remove('bg-gray-100', 'text-gray-600');
+                        this.classList.add('bg-primary', 'text-white');
+                        currentFilters.sort = this.getAttribute('data-sort');
+                        updateBookList();
+                    });
+                });
+                
+                // 重置筛选按钮
+                document.getElementById('resetFilterBtn').addEventListener('click', function() {
+                    currentFilters = {
+                        search: '',
+                        category: 'all',
+                        sort: 'newest'
+                    };
+                    document.getElementById('searchInput').value = '';
+                    
+                    // 重置分类按钮
+                    document.querySelectorAll('.category-filter').forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white');
+                        b.classList.add('bg-gray-100', 'text-gray-600');
+                    });
+                    document.querySelector('.category-filter[data-category="all"]').classList.remove('bg-gray-100', 'text-gray-600');
+                    document.querySelector('.category-filter[data-category="all"]').classList.add('bg-primary', 'text-white');
+                    
+                    // 重置排序按钮
+                    document.querySelectorAll('.sort-filter').forEach(b => {
+                        b.classList.remove('bg-primary', 'text-white');
+                        b.classList.add('bg-gray-100', 'text-gray-600');
+                    });
+                    document.querySelector('.sort-filter[data-sort="newest"]').classList.remove('bg-gray-100', 'text-gray-600');
+                    document.querySelector('.sort-filter[data-sort="newest"]').classList.add('bg-primary', 'text-white');
+                    
+                    updateBookList();
+                });
+            }
+
+            // 初始化搜索功能
+            function initSearch() {
+                const searchInput = document.getElementById('searchInput');
+                searchInput.addEventListener('input', function() {
+                    currentFilters.search = this.value.trim();
+                    updateBookList();
+                });
+            }
+
+            // 更新图书列表
+            function updateBookList() {
+                // 模拟加载延迟
+                const bookListElement = document.getElementById('bookList');
+                bookListElement.innerHTML = `
+                    <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                    <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                    <div class='skeleton-loading h-24 rounded-xl mb-4'></div>
+                `;
+                
+                setTimeout(() => {
+                    const filteredBooks = filterAndSortBooks(mockBooks);
+                    renderBookList(filteredBooks);
+                }, 300);
+            }
+
+            // Toast提示函数
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : type === 'info' ? 'bg-blue-500' : 'bg-primary'} transition-opacity duration-300 z-50`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 2000);
+            }
+
+            // 返回按钮事件
+            document.getElementById('backBtn').addEventListener('click', function() {
+                window.history.back();
+            });
+
+            // 初始化
+            function init() {
+                initFilterButtons();
+                initSearch();
+                // 延迟加载，模拟网络请求
+                setTimeout(() => {
+                    updateBookList();
+                }, 500);
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
