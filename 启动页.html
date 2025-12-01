@@ -1,68 +1,199 @@
-
+<!DOCTYPE html>
 <html lang='zh-CN'>
 <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>雀语图书馆自助借还系统 - 启动页</title>
+    <script src='https://cdn.tailwindcss.com'></script>
+    <link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet'/>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        secondary: '#10B981',
+                        accent: '#059669',
+                        light: '#ECFDF5',
+                        dark: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 1.5s ease-out forwards',
+                        'slide-up': 'slideUp 1.2s ease-out forwards',
+                        'scale-in': 'scaleIn 0.8s ease-out forwards'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style type='text/tailwindcss'>
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-green {
+                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+            }
+            .book-shadow {
+                filter: drop-shadow(0 10px 8px rgba(0,0,0,0.04)) drop-shadow(0 4px 3px rgba(0,0,0,0.1));
+            }
+            .shine-effect {
+                position: relative;
+                overflow: hidden;
+            }
+            .shine-effect::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(
+                    to right,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0.3) 50%,
+                    rgba(255, 255, 255, 0) 100%
+                );
+                transform: rotate(30deg);
+                animation: shine 6s infinite;
+            }
+            @keyframes shine {
+                0% { transform: translateX(-100%) rotate(30deg); }
+                100% { transform: translateX(100%) rotate(30deg); }
+            }
+        }
+    </style>
     <style>
-        .preview-suitable-app {
-            overflow: visible;
-            height: calc(100% - 20px);
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .app-border {
-            transform-origin: center;
-            position: relative;
-            border-radius: 30px 30px 30px 30px;
-        }
-        .app-border::after {
-            content: '';
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            border: 4px solid rgb(51, 51, 51);
-            border-radius: 30px 30px 30px 30px;
-        }
-        iframe {
-            transform-origin: left top;
-            border-radius: 26px;
+        ::-webkit-scrollbar { width: 0px; }
+        body {
             overflow: hidden;
-        }
-        .app-border-right {
-            position: absolute;
-            top: 259px;
-            right: -15px;
-        }
-        .app-border-footer {
-            width: 395px;
-            height: 38px;
-            position: absolute;
-            bottom: 8px;
-            left: -1px;
-            border-radius: 0 0 16px 16px;
-        }
-        ::-webkit-scrollbar {
-            width: 0px;
-            background: #f1f1f1;
         }
     </style>
 </head>
-<body>
-    <div id="preview-suitable-content-app" class="preview-suitable-app">
-        <div class="app-border" style="width: 393px;height: 852px;transform:scale(0.8591549295774648);">
-            <iframe id="iframe" class="vueIframeApp" style="border:none;width: 100%;height: 100%;"></iframe>
+<body class='bg-light min-h-screen flex flex-col items-center justify-center'>
+    <!-- 主容器 -->
+    <div class='relative w-full h-screen flex flex-col items-center justify-center p-6'>
+        <!-- 背景装饰元素 -->
+        <div class='absolute inset-0 overflow-hidden z-0'>
+            <div class='absolute inset-0 bg-cover bg-center opacity-20' style='background-image: url("https://design.gemcoder.com/staticResource/echoAiSystemImages/f686f85338659f4e9c260c30acdf9580.png"); filter: blur(1px);'></div>
+            <div class='absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse-slow'></div>
+            <div class='absolute bottom-1/3 right-1/3 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse-slow' style='animation-delay: 1s;'></div>
+            <div class='absolute top-2/3 left-1/3 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse-slow' style='animation-delay: 2s;'></div>
+        </div>
+
+        <!-- 图书馆标志区域 -->
+        <div class='relative z-10 flex flex-col items-center mb-12 opacity-0 animate-fade-in' style='animation-delay: 0.3s;'>
+            <div class='relative w-32 h-32 mb-6 bg-gradient-green rounded-xl shadow-lg book-shadow animate-float shine-effect flex items-center justify-center'>
+                <i class='fas fa-dove text-white text-5xl'></i>
+                <div class='absolute top-1/2 left-1/2 transform translate-x-3 translate-y-1 bg-white/20 backdrop-blur-sm rounded-full p-1.5 shadow-md'>
+                    <i class='fas fa-book text-white'></i>
+                </div>
+            </div>
+            <h1 class='text-[clamp(2rem,5vw,3.5rem)] font-bold text-dark text-center text-shadow'>
+                雀语<span class='text-primary'>图书馆</span>
+            </h1>
+        </div>
+
+        <!-- 系统标题区域 -->
+        <div class='relative z-10 text-center mb-16 opacity-0 animate-slide-up' style='animation-delay: 0.6s;'>
+            <h2 class='text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-dark mb-3'>自助借还系统</h2>
+            <p class='text-gray-600 max-w-xs text-sm md:text-base'>便捷借阅 · 科技赋能 · 高效服务</p>
+        </div>
+
+        <!-- 加载指示器区域 -->
+        <div class='relative z-10 w-full max-w-xs opacity-0 animate-scale-in' style='animation-delay: 0.9s;'>
+            <div class='bg-white rounded-xl shadow-xl p-6 md:p-8'>
+                <div class='flex items-center mb-4'>
+                    <div class='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3'>
+                        <i class='fas fa-spinner text-primary animate-spin'></i>
+                    </div>
+                    <span class='text-gray-700 font-medium'>系统初始化中...</span>
+                </div>
+                <div class='w-full bg-gray-200 rounded-full h-2.5 mb-2'>
+                    <div class='bg-primary h-2.5 rounded-full w-0 transition-all duration-300' id='progress-bar'></div>
+                </div>
+                <p class='text-xs text-gray-500 text-right' id='progress-text'>0%</p>
+            </div>
+        </div>
+
+        <!-- 进入系统按钮 -->
+        <div class='relative z-10 mt-16 opacity-0 animate-fade-in slide-up' style='animation-delay: 0.8s;'>
+            <button class='bg-primary hover:bg-accent text-white font-medium py-3 px-8 rounded-full shadow-lg transition-all duration-300 flex items-center group' id='enter-system'>
+                <i class='fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform mr-2'></i>
+                <span>进入系统</span>
+            </button>
+        </div>
+
+        <!-- 底部信息区域 -->
+        <div class='absolute bottom-8 left-0 right-0 z-10 text-center text-gray-500 text-xs opacity-0 animate-fade-in' style='animation-delay: 1.2s;'>
+            <p>© 2025 雀语图书馆 版权所有</p>
+            <p class='mt-1'>版本 v1.2.0</p>
         </div>
     </div>
+
+    <script>
+        // 页面加载时初始化渲染
+        document.addEventListener('DOMContentLoaded', function () {
+            simulateLoadingProgress();
+            
+            // 点击进入系统按钮也跳转到登录页面
+            document.getElementById('enter-system').addEventListener('click', function() {
+                window.location.href = 'login.html';
+            });
+        });
+
+        // 模拟加载进度
+        function simulateLoadingProgress() {
+            var progressBar = document.getElementById('progress-bar');
+            var progressText = document.getElementById('progress-text');
+            var progress = 0;
+            var interval = setInterval(function () {
+                // 随机增加进度，模拟真实加载过程
+                var increment = Math.random() * 10;
+                progress += increment;
+
+                // 确保进度不会超过100%
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+
+                    // 加载完成后跳转到登录界面
+                    setTimeout(function () {
+                        window.location.href = 'login.html';
+                    }, 500);
+                }
+
+                // 更新进度条和文本
+                progressBar.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '%';
+            }, 300);
+        }
+    </script>
 </body>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const html = "<html lang='zh-CN'>\n        <head >\n        <meta charset='utf-8'/>\n<meta content='width=device-width, initial-scale=1.0' name='viewport'/>\n<title >雀语图书馆自助借还系统</title>\n<script src='https://res.gemcoder.com/js/reload.js'><\/script>\n<script src='https://cdn.tailwindcss.com'><\/script>\n<link href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet'/>\n<script >tailwind.config = {\n  theme: {\n    extend: {\n      colors: {\n        primary: '#34D399',\n        // 清新绿色主色调\n        secondary: '#10B981',\n        // 深一点的绿色\n        accent: '#059669',\n        // 强调色\n        light: '#ECFDF5',\n        // 浅色背景\n        dark: '#1E293B' // 深色文字\n      },\n      fontFamily: {\n        sans: ['Inter', 'system-ui', 'sans-serif']\n      },\n      animation: {\n        'float': 'float 3s ease-in-out infinite',\n        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',\n        'fade-in': 'fadeIn 1.5s ease-out forwards',\n        'slide-up': 'slideUp 1.2s ease-out forwards',\n        'scale-in': 'scaleIn 0.8s ease-out forwards'\n      },\n      keyframes: {\n        float: {\n          '0%, 100%': {\n            transform: 'translateY(0)'\n          },\n          '50%': {\n            transform: 'translateY(-10px)'\n          }\n        },\n        fadeIn: {\n          '0%': {\n            opacity: '0'\n          },\n          '100%': {\n            opacity: '1'\n          }\n        },\n        slideUp: {\n          '0%': {\n            transform: 'translateY(30px)',\n            opacity: '0'\n          },\n          '100%': {\n            transform: 'translateY(0)',\n            opacity: '1'\n          }\n        },\n        scaleIn: {\n          '0%': {\n            transform: 'scale(0.9)',\n            opacity: '0'\n          },\n          '100%': {\n            transform: 'scale(1)',\n            opacity: '1'\n          }\n        }\n      }\n    }\n  }\n};<\/script>\n<style type='text/tailwindcss'>\n        @layer utilities {\n            .content-auto {\n                content-visibility: auto;\n            }\n            .text-shadow {\n                text-shadow: 0 2px 4px rgba(0,0,0,0.1);\n            }\n            .bg-gradient-green {\n                background: linear-gradient(135deg, #34D399 0%, #10B981 100%);\n            }\n            .book-shadow {\n                filter: drop-shadow(0 10px 8px rgba(0,0,0,0.04)) drop-shadow(0 4px 3px rgba(0,0,0,0.1));\n            }\n            .shine-effect {\n                position: relative;\n                overflow: hidden;\n            }\n            .shine-effect::after {\n                content: '';\n                position: absolute;\n                top: -50%;\n                left: -50%;\n                width: 200%;\n                height: 200%;\n                background: linear-gradient(\n                    to right,\n                    rgba(255, 255, 255, 0) 0%,\n                    rgba(255, 255, 255, 0.3) 50%,\n                    rgba(255, 255, 255, 0) 100%\n                );\n                transform: rotate(30deg);\n                animation: shine 6s infinite;\n            }\n            @keyframes shine {\n                0% { transform: translateX(-100%) rotate(30deg); }\n                100% { transform: translateX(100%) rotate(30deg); }\n            }\n        }\n    </style>\n    \n        <style>\n            ::-webkit-scrollbar { width: 0px; }\n        </style>\n    </head>\n<body class='bg-light min-h-screen flex flex-col items-center justify-center overflow-hidden'>\n        <!-- [MODULE] a1b_启动画面主容器 -->\n<div class='relative w-full h-screen flex flex-col items-center justify-center p-6'>\n        <!-- 背景装饰元素 -->\n<div class='absolute inset-0 overflow-hidden z-0'>\n        <!-- 图书馆背景图片 -->\n<div class='absolute inset-0 bg-cover bg-center opacity-20' style='background-image: url(\"https://design.gemcoder.com/staticResource/echoAiSystemImages/f686f85338659f4e9c260c30acdf9580.png\"); filter: blur(1px);'>\n        </div>\n<div class='absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse-slow'>\n        </div>\n<div class='absolute bottom-1/3 right-1/3 w-80 h-80 bg-secondary/10 rounded-full blur-3xl animate-pulse-slow' style='animation-delay: 1s;'>\n        </div>\n<div class='absolute top-2/3 left-1/3 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse-slow' style='animation-delay: 2s;padding-left:0px'>\n        </div>\n    </div>\n<!-- [MODULE] c2d_图书馆标志区域 -->\n<div class='relative z-10 flex flex-col items-center mb-12 opacity-0 animate-fade-in' data-ytextravalue='extra-we4vaapf5' style='animation-delay: 0.3s;'>\n        <div class='relative w-32 h-32 mb-6 bg-gradient-green rounded-xl shadow-lg book-shadow animate-float shine-effect flex items-center justify-center' data-selectorname='#id-w33vx' data-ytextravalue='extra-gdd1m4x9t' data-ytindex='0' data-ytoriginindex='0' data-ytparentvalue='extra-we4vaapf5'>\n        <i class='fas fa-dove text-white text-5xl' data-ytindex='0' data-ytoriginindex='0' data-ytparentvalue='extra-gdd1m4x9t'>\n        </i>\n<div class='absolute top-1/2 left-1/2 transform translate-x-3 translate-y-1 bg-white/20 backdrop-blur-sm rounded-full p-1.5 shadow-md' data-ytindex='1' data-ytoriginindex='1'>\n        <i class='fas fa-book text-white'>\n        </i>\n    </div>\n    </div>\n<h1 class='text-[clamp(2rem,5vw,3.5rem)] font-bold text-dark text-center text-shadow' data-ytindex='1' data-ytoriginindex='1'>\n        雀语\n<span class='text-primary'>\n        图书馆\n    </span>\n    </h1>\n    </div>\n<!-- [/MODULE] c2d_图书馆标志区域 -- 包含图书馆图标和名称，图标使用绿色渐变背景，有浮动和光泽动画效果 -->\n<!-- [MODULE] e3f_系统标题区域 -->\n<div class='relative z-10 text-center mb-16 opacity-0 animate-slide-up' style='animation-delay: 0.6s;'>\n        <h2 class='text-[clamp(1.5rem,3vw,2.5rem)] font-semibold text-dark mb-3'>\n        自助借还系统\n    </h2>\n<p class='text-gray-600 max-w-xs text-sm md:text-base'>\n        便捷借阅\n·\n科技赋能\n·\n高效服务\n    </p>\n    </div>\n<!-- [/MODULE] e3f_系统标题区域 -- 显示系统名称和核心理念标语 -->\n<!-- [MODULE] g4h_加载指示器区域 -->\n<div class='relative z-10 w-full max-w-xs opacity-0 animate-scale-in' style='animation-delay: 0.9s;'>\n        <div class='bg-white rounded-xl shadow-xl p-6 md:p-8'>\n        <div class='flex items-center mb-4'>\n        <div class='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3'>\n        <i class='fas fa-spinner text-primary animate-spin'>\n        </i>\n    </div>\n<span class='text-gray-700 font-medium'>\n        系统初始化中...\n    </span>\n    </div>\n<div class='w-full bg-gray-200 rounded-full h-2.5 mb-2'>\n        <div class='bg-primary h-2.5 rounded-full w-0 transition-all duration-300' id='progress-bar'>\n        </div>\n    </div>\n<p class='text-xs text-gray-500 text-right' id='progress-text'>\n        0%\n    </p>\n    </div>\n    </div>\n<!-- [/MODULE] g4h_加载指示器区域 -- 包含加载动画图标、进度条和百分比显示 -->\n<!-- [MODULE] e3f_进入系统按钮 -->\n<div class='relative z-10 mt-16 opacity-0 animate-fade-in slide-up' style='animation-delay: 0.8s;'>\n        <button class='bg-primary hover:bg-accent text-white font-medium py-3 px-8 rounded-full shadow-lg transition-all duration-300 flex items-center group' id='enter-system' style='padding-left:0px;padding-right:0px;gap:8px;justify-content:start' data-ytextravalue='extra-zr11lzduk'>\n        <div style='width:60px;height:36px;padding-bottom:5px;padding-top:5px' data-ytextravalue='extra-icu7dvvjy'>\n        <i class='fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform yt-editor' data-ytoriginindex='1' data-ytindex='0' data-ytparentvalue='extra-zr11lzduk' style='opacity: 1; color: rgb(255, 255, 255); font-family: \"Font Awesome 6 Free\"; font-size: 16px; font-weight: 900; font-style: normal; line-height: 16px; text-align: center; text-indent: 0px;padding-right:17px;padding-bottom:0px;width:60px;height:38px'>\n        </i>\n<span class style='width: 64px; height: 23px; outline: none; opacity: 1;' contenteditable='false' data-ytparentvalue='extra-zr11lzduk' data-ytoriginindex='0' data-ytindex='1'>\n        <br />\n    </span>\n    </div>\n    </button>\n    </div>\n<!-- [/MODULE] e3f_进入系统按钮 -- 包含进入系统文字和动态箭头图标，有悬停效果 -->\n<!-- [MODULE] i5j_底部信息区域 -->\n<div class='absolute bottom-8 left-0 right-0 z-10 text-center text-gray-500 text-xs opacity-0 animate-fade-in' style='animation-delay: 1.2s;'>\n        <p class='yt-editor' contenteditable='false' style='outline: none;'>\n        ©\n2025 雀语图书馆 版权所有\n    </p>\n<p class='mt-1'>\n        版本 v1.2.0\n    </p>\n    </div>\n<!-- [/MODULE] i5j_底部信息区域 -- 显示版权信息和系统版本号 -->\n    </div>\n<!-- [/MODULE] a1b_启动画面主容器 -- 包含整个启动画面的所有元素，背景有模糊渐变圆形装饰 -->\n<!-- [JSMOD] k6l_进度条动画脚本 -->\n<script id='progress-script'>// 页面加载时初始化渲染\ndocument.addEventListener('DOMContentLoaded', function () {\n  simulateLoadingProgress();\n});\n\n// 模拟加载进度\nfunction simulateLoadingProgress() {\n  var progressBar = document.getElementById('progress-bar');\n  var progressText = document.getElementById('progress-text');\n  var progress = 0;\n  var interval = setInterval(function () {\n    // 随机增加进度，模拟真实加载过程\n    var increment = Math.random() * 10;\n    progress += increment;\n\n    // 确保进度不会超过100%\n    if (progress >= 100) {\n      progress = 100;\n      clearInterval(interval);\n\n      // 加载完成后跳转到主界面\n      setTimeout(function () {\n        // 在实际应用中，这里会跳转到系统主界面\n        // 这里使用console.log模拟\n        console.log('加载完成，准备进入系统主界面');\n      }, 500);\n    }\n\n    // 更新进度条和文本\n    progressBar.style.width = \"\".concat(progress, \"%\");\n    progressText.textContent = \"\".concat(Math.round(progress), \"%\");\n  }, 300);\n}<\/script>\n<!-- [/JSMOD] k6l_进度条动画脚本 -- 模拟系统加载进度，随机增加进度值直到100%，完成后准备进入主界面 -->\n    </body>\n    </html>";
-        iframe.srcdoc = html;
-    });
-</script>
 </html>
