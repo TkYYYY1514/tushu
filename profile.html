@@ -271,10 +271,16 @@
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查登录状态
-            if (!StorageManager.isLoggedIn()) {
-                window.location.href = 'login.html';
-                return;
+            // 检查是否在SPA环境中运行
+            const isSPA = document.getElementById('appContent') !== null;
+            
+            // 如果不在SPA环境中，才执行原有的登录检查和初始化
+            if (!isSPA) {
+                // 检查登录状态
+                if (!StorageManager.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
             }
 
             // 显示用户信息
@@ -292,19 +298,24 @@
             // 更新统计信息
             updateStats();
 
-            // 动态加载弹窗组件
-            fetch('components/modal.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('modalContainer').innerHTML = html;
-                    // 绑定事件
-                    bindEvents();
-                })
-                .catch(error => {
-                    console.error('加载弹窗组件失败:', error);
-                    // 即使弹窗组件加载失败，也要绑定事件
-                    bindEvents();
-                });
+            // 动态加载弹窗组件（如果不是在SPA环境中）
+            if (!isSPA) {
+                fetch('components/modal.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('modalContainer').innerHTML = html;
+                        // 绑定事件
+                        bindEvents();
+                    })
+                    .catch(error => {
+                        console.error('加载弹窗组件失败:', error);
+                        // 即使弹窗组件加载失败，也要绑定事件
+                        bindEvents();
+                    });
+            } else {
+                // 在SPA环境中直接绑定事件
+                bindEvents();
+            }
         });
 
         // 更新统计信息
@@ -522,6 +533,79 @@
             });
         }
         
+        // 显示消息卡片
+        function showMessageCard(message, type = 'info') {
+            // 创建消息卡片元素
+            const messageCard = document.createElement('div');
+            messageCard.className = 'message-card';
+            
+            // 根据消息类型设置样式
+            let icon = '';
+            let bgColor = '';
+            let textColor = '';
+            
+            switch(type) {
+                case 'success':
+                    icon = '<i class="fas fa-check-circle"></i>';
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-exclamation-circle"></i>';
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    break;
+                case 'warning':
+                    icon = '<i class="fas fa-exclamation-triangle"></i>';
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-white';
+                    break;
+                case 'info':
+                default:
+                    icon = '<i class="fas fa-info-circle"></i>';
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    break;
+            }
+            
+            messageCard.innerHTML = `
+                <div class="rounded-lg shadow-lg ${bgColor} ${textColor} p-4 flex items-start">
+                    <div class="mr-3 text-xl">${icon}</div>
+                    <div class="flex-1">${message}</div>
+                    <button class="ml-3 text-xl opacity-75 hover:opacity-100 focus:outline-none message-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // 添加到消息容器
+            document.getElementById('messageCardContainer').appendChild(messageCard);
+            
+            // 显示动画
+            setTimeout(() => {
+                messageCard.classList.add('show');
+            }, 10);
+            
+            // 绑定关闭事件
+            const closeBtn = messageCard.querySelector('.message-close');
+            closeBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                }, 300);
+            });
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (messageCard.parentNode) {
+                    messageCard.classList.remove('show');
+                    setTimeout(() => {
+                        messageCard.remove();
+                    }, 300);
+                }
+            }, 3000);
+        }
+        
         // 显示设置
         function showSettings() {
             const userInfo = StorageManager.getUserInfo();
@@ -602,11 +686,7 @@
         function showPaymentModal() {
             const amount = parseFloat(fineAmount.textContent);
             if (amount <= 0) {
-                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                    GlobalModalManager.message('当前没有欠款');
-                } else {
-                    alert('当前没有欠款');
-                }
+                showMessageCard('当前没有欠款', 'info');
                 return;
             }
             
@@ -635,11 +715,7 @@
         
         // 确认支付
         function confirmPayment() {
-            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                GlobalModalManager.message('支付成功！感谢您的付款。');
-            } else {
-                alert('支付成功！感谢您的付款。');
-            }
+            showMessageCard('支付成功！感谢您的付款。', 'success');
             
             // 更新罚款金额为0
             fineAmount.textContent = '0.0';

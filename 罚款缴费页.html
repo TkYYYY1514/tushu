@@ -1,0 +1,467 @@
+<html lang="zh-CN"><head>
+        <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图书馆自助借还系统</title>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://res.gemcoder.com/js/reload.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#FF7A00',
+        secondary: '#333333',
+        neutral: '#F5F5F5',
+        light: '#FFFFFF',
+        'primary-dark': '#E06A00'
+      },
+      fontFamily: {
+        sans: ['PingFang SC', 'Helvetica Neue', 'Arial', 'sans-serif']
+      }
+    }
+  }
+};</script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .menu-active {
+                @apply bg-primary text-white;
+            }
+            .btn-scale {
+                @apply transition-transform duration-300;
+            }
+            .btn-scale:active {
+                @apply transform scale-105;
+            }
+        }
+    </style>
+    </head>
+<body class="bg-white text-secondary font-sans min-h-screen flex flex-col">
+        <!-- 顶部导航栏 -->
+<header class="bg-primary text-white py-4 px-6 shadow-md z-10">
+        <div class="flex justify-between items-center">
+        <h1 class="text-[clamp(1.2rem,5vw,1.8rem)] font-bold">
+        图书馆自助借还系统
+    </h1>
+<div class="flex space-x-3">
+        <button class="btn-scale p-2 rounded-full hover:bg-primary-dark transition-colors duration-300">
+        <i class="fas fa-question-circle text-lg">
+        </i>
+    </button>
+<button class="btn-scale p-2 rounded-full hover:bg-primary-dark transition-colors duration-300">
+        <i class="fas fa-cog text-lg">
+        </i>
+    </button>
+    </div>
+    </div>
+    </header>
+<!-- 中间内容区 (iframe) -->
+<main class="flex-grow relative">
+        <iframe id="navigation" src="" width="100%" height="100%" class="" srcdoc="<html lang='zh-CN'>
+        <head >
+        <meta charset='UTF-8'/>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+<title >罚款缴费 - 图书馆自助借还系统</title>
+<link rel='stylesheet' href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css'/>
+<script src='https://res.gemcoder.com/js/reload.js'></script>
+<script src='https://cdn.tailwindcss.com'></script>
+<script >tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#FF7A00',
+        secondary: '#333333',
+        neutral: '#F5F5F5',
+        light: '#FFFFFF',
+        'primary-dark': '#E06A00',
+        success: '#00B42A',
+        warning: '#FF7D00',
+        danger: '#F53F3F'
+      },
+      fontFamily: {
+        sans: ['PingFang SC', 'Helvetica Neue', 'Arial', 'sans-serif']
+      }
+    }
+  }
+};</script>
+<style type='text/tailwindcss'>
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-scale {
+                @apply transition-transform duration-300;
+            }
+            .btn-scale:active {
+                @apply transform scale-105;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+            .payment-method-active {
+                @apply border-primary bg-primary/5;
+            }
+        }
+    </style>
+    
+      <style>
+          ::-webkit-scrollbar { width: 0px; }
+      </style>
+  </head>
+<body class='bg-neutral p-4 md:p-6 w-full h-full overflow-auto'>
+        <!-- 页面标题 -->
+<div class='mb-6'>
+        <h2 class='text-[clamp(1.25rem,5vw,1.5rem)] font-bold text-secondary'>
+        罚款缴费
+    </h2>
+<p class='text-gray-500 text-sm mt-1'>
+        请确认罚款信息并选择支付方式完成缴费
+    </p>
+    </div>
+<!-- 罚款信息卡片 -->
+<div class='bg-white rounded-xl p-5 mb-6 card-shadow'>
+        <div class='flex justify-between items-start mb-4'>
+        <div >
+        <h3 class='font-semibold text-secondary'>
+        罚款单号:
+<span class='text-gray-600 font-normal'>
+        FN20231128001
+    </span>
+    </h3>
+<p class='text-gray-500 text-sm mt-1'>
+        关联图书: 《JavaScript高级程序设计》
+    </p>
+    </div>
+<span class='bg-danger/10 text-danger text-xs px-2 py-1 rounded-full'>
+        未缴费
+    </span>
+    </div>
+<div class='grid grid-cols-2 gap-x-6 gap-y-3 text-sm mb-5'>
+        <div >
+        <p class='text-gray-500'>
+        罚款类型
+    </p>
+<p class='font-medium'>
+        图书逾期
+    </p>
+    </div>
+<div >
+        <p class='text-gray-500'>
+        罚款金额
+    </p>
+<p class='font-medium text-danger'>
+        ¥3.50
+    </p>
+    </div>
+<div >
+        <p class='text-gray-500'>
+        罚款原因
+    </p>
+<p class='font-medium'>
+        逾期7天
+    </p>
+    </div>
+<div >
+        <p class='text-gray-500'>
+        罚款日期
+    </p>
+<p class='font-medium'>
+        2023-11-28
+    </p>
+    </div>
+    </div>
+<div class='border-t border-gray-100 pt-4 mt-4'>
+        <div class='flex justify-between items-center'>
+        <p class='text-gray-500'>
+        应缴总额
+    </p>
+<p class='text-xl font-bold text-danger'>
+        ¥3.50
+    </p>
+    </div>
+    </div>
+    </div>
+<!-- 支付方式选择 -->
+<div class='bg-white rounded-xl p-5 mb-6 card-shadow'>
+        <h3 class='font-semibold text-secondary mb-4'>
+        选择支付方式
+    </h3>
+<div class='space-y-3'>
+        <!-- 微信支付 -->
+<div class='payment-method border border-gray-200 rounded-lg p-3 flex items-center justify-between cursor-pointer transition-all duration-300 payment-method-active' data-method='wechat'>
+        <div class='flex items-center'>
+        <div class='w-10 h-10 rounded-full bg-[#07C160] flex items-center justify-center text-white mr-3'>
+        <i class='fab fa-weixin text-lg'>
+        </i>
+    </div>
+<div >
+        <p class='font-medium'>
+        微信支付
+    </p>
+<p class='text-xs text-gray-500'>
+        推荐使用微信扫码支付
+    </p>
+    </div>
+    </div>
+<i class='fas fa-check-circle text-primary'>
+        </i>
+    </div>
+<!-- 支付宝支付 -->
+<div class='payment-method border border-gray-200 rounded-lg p-3 flex items-center justify-between cursor-pointer transition-all duration-300' data-method='alipay'>
+        <div class='flex items-center'>
+        <div class='w-10 h-10 rounded-full bg-[#1677FF] flex items-center justify-center text-white mr-3'>
+        <i class='fab fa-alipay text-lg'>
+        </i>
+    </div>
+<div >
+        <p class='font-medium'>
+        支付宝支付
+    </p>
+<p class='text-xs text-gray-500'>
+        推荐使用支付宝扫码支付
+    </p>
+    </div>
+    </div>
+<i class='far fa-circle text-gray-300'>
+        </i>
+    </div>
+<!-- 校园卡支付 -->
+<div class='payment-method border border-gray-200 rounded-lg p-3 flex items-center justify-between cursor-pointer transition-all duration-300' data-method='campus'>
+        <div class='flex items-center'>
+        <div class='w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center text-white mr-3'>
+        <i class='fas fa-id-card-alt text-lg'>
+        </i>
+    </div>
+<div >
+        <p class='font-medium'>
+        校园卡支付
+    </p>
+<p class='text-xs text-gray-500'>
+        请将校园卡贴近读卡器
+    </p>
+    </div>
+    </div>
+<i class='far fa-circle text-gray-300'>
+        </i>
+    </div>
+    </div>
+    </div>
+<!-- 支付二维码区域 (默认隐藏) -->
+<div id='payment-qrcode' class='bg-white rounded-xl p-5 mb-6 card-shadow hidden'>
+        <div class='text-center'>
+        <h3 class='font-semibold text-secondary mb-4'>
+        微信支付
+    </h3>
+<div class='w-48 h-48 mx-auto bg-white p-3 border border-gray-100 mb-4'>
+        <img src='https://design.gemcoder.com/staticResource/echoAiSystemImages/9fc6e02995efa35321cf038d964bc325.png' alt='微信支付二维码' class='w-full h-full object-contain'/>
+    </div>
+<p class='text-sm text-gray-500 mb-2'>
+        请使用微信扫描二维码支付
+    </p>
+<p class='text-danger font-medium mb-4'>
+        ¥3.50
+    </p>
+<div class='flex justify-center space-x-3'>
+        <button id='refresh-qrcode' class='px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm btn-scale'>
+        <i class='fas fa-sync-alt mr-1'>
+        </i>
+刷新二维码
+    </button>
+<button id='cancel-payment' class='px-4 py-2 bg-primary text-white rounded-lg text-sm btn-scale'>
+        取消支付
+    </button>
+    </div>
+    </div>
+    </div>
+<!-- 底部操作按钮 -->
+<div class='fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg z-10'>
+        <div class='flex space-x-3'>
+        <button id='view-details' class='flex-1 py-3 border border-primary text-primary rounded-lg font-medium btn-scale'>
+        <i class='fas fa-list-alt mr-2'>
+        </i>
+查看明细
+    </button>
+<button id='confirm-payment' class='flex-1 py-3 bg-primary text-white rounded-lg font-medium btn-scale'>
+        <i class='fas fa-check mr-2'>
+        </i>
+确认缴费
+    </button>
+    </div>
+    </div>
+<!-- 缴费成功提示弹窗 (默认隐藏) -->
+<div id='success-modal' class='fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden'>
+        <div class='bg-white rounded-xl p-6 max-w-xs w-full mx-4 text-center transform transition-all duration-300 scale-95 opacity-0' id='modal-content'>
+        <div class='w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4'>
+        <i class='fas fa-check text-2xl text-success'>
+        </i>
+    </div>
+<h3 class='text-xl font-bold text-secondary mb-2'>
+        缴费成功
+    </h3>
+<p class='text-gray-500 mb-6'>
+        您已成功缴纳罚款，感谢您的配合
+    </p>
+<button id='close-modal' class='w-full py-3 bg-primary text-white rounded-lg font-medium btn-scale'>
+        完成
+    </button>
+    </div>
+    </div>
+<script >// 当页面大小或者内容发生变化时，通知导航页面调整iframe高度
+ytSendPageSize();
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function () {
+  // 支付方式选择
+  var paymentMethods = document.querySelectorAll('.payment-method');
+  paymentMethods.forEach(function (method) {
+    method.addEventListener('click', function () {
+      // 移除所有选中状态
+      paymentMethods.forEach(function (m) {
+        m.classList.remove('payment-method-active');
+        m.querySelector('i.far, i.fas').className = 'far fa-circle text-gray-300';
+      });
+
+      // 设置当前选中状态
+      this.classList.add('payment-method-active');
+      this.querySelector('i.far, i.fas').className = 'fas fa-check-circle text-primary';
+    });
+  });
+  // 确认缴费按钮点击事件
+  document.getElementById('confirm-payment').addEventListener('click', function () {
+    // 隐藏缴费信息和支付方式，显示二维码
+    document.querySelector('.bg-white.rounded-xl.p-5.mb-6.card-shadow').style.display = 'none';
+    document.querySelectorAll('.bg-white.rounded-xl.p-5.mb-6.card-shadow')[1].style.display = 'none';
+    document.getElementById('payment-qrcode').classList.remove('hidden');
+
+    // 通知调整iframe高度
+    ytSendPageSize();
+  });
+  // 取消支付按钮点击事件
+  document.getElementById('cancel-payment').addEventListener('click', function () {
+    // 显示缴费信息和支付方式，隐藏二维码
+    document.querySelector('.bg-white.rounded-xl.p-5.mb-6.card-shadow').style.display = 'block';
+    document.querySelectorAll('.bg-white.rounded-xl.p-5.mb-6.card-shadow')[1].style.display = 'block';
+    document.getElementById('payment-qrcode').classList.add('hidden');
+
+    // 通知调整iframe高度
+    ytSendPageSize();
+  });
+  // 查看明细按钮点击事件
+  document.getElementById('view-details').addEventListener('click', function () {
+    alert(&quot;\u7F5A\u6B3E\u660E\u7EC6\uFF1A\n\u7F5A\u6B3E\u5355\u53F7\uFF1AFN20231128001\n\u56FE\u4E66\u540D\u79F0\uFF1A\u300AJavaScript\u9AD8\u7EA7\u7A0B\u5E8F\u8BBE\u8BA1\u300B\nISBN\uFF1A9787115549655\n\u501F\u9605\u65E5\u671F\uFF1A2023-10-15\n\u5E94\u8FD8\u65E5\u671F\uFF1A2023-11-14\n\u5B9E\u9645\u8FD8\u4E66\u65E5\u671F\uFF1A2023-11-21\n\u903E\u671F\u5929\u6570\uFF1A7\u5929\n\u7F5A\u6B3E\u91D1\u989D\uFF1A\xA53.50\n\u7F5A\u6B3E\u539F\u56E0\uFF1A\u56FE\u4E66\u903E\u671F\u672A\u8FD8\n\u7F5A\u6B3E\u65E5\u671F\uFF1A2023-11-28\n\u7F34\u8D39\u72B6\u6001\uFF1A\u672A\u7F34\u8D39&quot;);
+  });
+  // 模拟支付成功 - 实际项目中应该是扫码后由后端通知前端
+  setTimeout(function () {
+    // 显示成功弹窗
+    var modal = document.getElementById('success-modal');
+    var modalContent = document.getElementById('modal-content');
+    modal.classList.remove('hidden');
+    setTimeout(function () {
+      modalContent.classList.remove('scale-95', 'opacity-0');
+      modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+  }, 15000); // 15秒后模拟支付成功
+  // 关闭成功弹窗
+  document.getElementById('close-modal').addEventListener('click', function () {
+    var modal = document.getElementById('success-modal');
+    var modalContent = document.getElementById('modal-content');
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    setTimeout(function () {
+      modal.classList.add('hidden');
+      // 这里可以添加跳转逻辑，比如返回个人中心
+    }, 300);
+  });
+  // 刷新二维码按钮点击事件
+  document.getElementById('refresh-qrcode').addEventListener('click', function () {
+    // 模拟刷新二维码
+    var qrcodeImg = document.querySelector('#payment-qrcode img');
+    qrcodeImg.style.opacity = '0.5';
+    setTimeout(function () {
+      qrcodeImg.style.opacity = '1';
+      // 在实际项目中，这里应该请求新的二维码图片
+    }, 800);
+  });
+});</script>
+    </body>
+    </html>" data-iframe-id="navigation-iframe"></iframe>
+    </main>
+<!-- 底部辅助操作区 -->
+<footer class="bg-white shadow-lg z-10">
+        <div class="py-3 px-4 bg-neutral">
+        <div class="flex justify-between items-center text-sm text-gray-600">
+        <div>
+        设备状态:
+<span class="text-green-600">
+        正常
+    </span>
+    </div>
+<div class="flex space-x-4">
+        <button class="text-primary hover:underline btn-scale">
+        <i class="fas fa-phone-alt mr-1">
+        </i>
+紧急联系
+    </button>
+<button class="text-primary hover:underline btn-scale">
+        <i class="fas fa-book mr-1">
+        </i>
+操作指南
+    </button>
+    </div>
+    </div>
+    </div>
+<!-- 底部导航菜单 -->
+<nav class="py-2">
+        <ul class="grid grid-cols-4 gap-1">
+        <li class="menu-active">
+        <a href="javascript:void(0);" data-uuid="self-service-home" onclick="ytCustomClickRouter(this, event)" class="flex flex-col items-center py-3 px-2 text-sm">
+        <i class="fas fa-home text-xl mb-1">
+        </i>
+<span>
+        首页
+    </span>
+    </a>
+    </li>
+<li>
+        <a href="javascript:void(0);" data-uuid="book-search" onclick="ytCustomClickRouter(this, event)" class="flex flex-col items-center py-3 px-2 text-sm text-gray-600">
+        <i class="fas fa-search text-xl mb-1">
+        </i>
+<span>
+        查询
+    </span>
+    </a>
+    </li>
+<li>
+        <a href="javascript:void(0);" data-uuid="book-borrow" onclick="ytCustomClickRouter(this, event)" class="flex flex-col items-center py-3 px-2 text-sm text-gray-600">
+        <i class="fas fa-book-open text-xl mb-1">
+        </i>
+<span>
+        借阅
+    </span>
+    </a>
+    </li>
+<li>
+        <a href="javascript:void(0);" data-uuid="user-center" onclick="ytCustomClickRouter(this, event)" class="flex flex-col items-center py-3 px-2 text-sm text-gray-600">
+        <i class="fas fa-user text-xl mb-1">
+        </i>
+<span>
+        我的
+    </span>
+    </a>
+    </li>
+    </ul>
+    </nav>
+    </footer>
+<script>// 
+页面加载时初始化;
+document.addEventListener('DOMContentLoaded', function () {
+  // 监听iframe大小变化
+  ytGetIframeResize(document.getElementById('navigation'));
+  // 初始化菜单激活状态样式
+  var style = document.createElement('style');
+  style.textContent = ".menu-active a {\n                    background-color: #FF7A00 !important;\n                    color: white !important;\n                }\n                .menu-active a i {\n                    color: white !important;\n                }\n                nav ul li a {\n                    transition: all 0.3s ease;\n                }\n                nav ul li:not(.menu-active) a:hover {\n                    background-color: #FFF5EB;\n                    color: #FF7A00;\n                }\n                nav ul li:not(.menu-active) a:hover i {\n                    color: #FF7A00;\n                }";
+  document.head.appendChild(style);
+});</script>
+    
+    </body></html>

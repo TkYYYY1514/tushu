@@ -1,0 +1,1085 @@
+<html lang='zh-CN'>
+        <head >
+        <meta charset='UTF-8'/>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+<title >罚款管理 - 图书馆自助借还系统</title>
+<link rel='stylesheet' href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css'/>
+<script src='https://res.gemcoder.com/js/reload.js'></script>
+<script src='https://cdn.tailwindcss.com'></script>
+<script >tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#FF7A00',
+        secondary: '#333333',
+        neutral: '#F5F5F5',
+        success: '#10B981',
+        warning: '#F59E0B',
+        danger: '#EF4444',
+        info: '#3B82F6'
+      },
+      fontFamily: {
+        sans: ['PingFang SC', 'Helvetica Neue', 'Arial', 'sans-serif']
+      }
+    }
+  }
+};</script>
+<style type='text/tailwindcss'>
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .btn-scale {
+                @apply transition-transform duration-300;
+            }
+            .btn-scale:active {
+                @apply transform scale-105;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .badge {
+                @apply px-2 py-1 rounded-full text-xs font-medium;
+            }
+        }
+    </style>
+    </head>
+<body class='bg-neutral text-secondary font-sans min-h-screen flex flex-col'>
+        <!-- 页面标题栏 -->
+<div class='bg-white shadow-sm py-3 px-4 sticky top-0 z-10'>
+        <div class='flex justify-between items-center'>
+        <h2 class='text-xl font-bold'>
+        罚款管理
+    </h2>
+<div class='flex space-x-2'>
+        <button id='export-btn' class='btn-scale bg-white border border-gray-300 text-secondary px-3 py-1.5 rounded-md text-sm flex items-center'>
+        <i class='fas fa-download mr-1.5'>
+        </i>
+导出明细
+    </button>
+<button id='batch-handle-btn' class='btn-scale bg-primary text-white px-3 py-1.5 rounded-md text-sm flex items-center'>
+        <i class='fas fa-cogs mr-1.5'>
+        </i>
+批量处理
+    </button>
+    </div>
+    </div>
+    </div>
+<!-- 筛选搜索区 -->
+<div class='bg-white p-4 shadow-sm mb-4'>
+        <div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
+        <div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        罚款ID
+    </label>
+<div class='relative'>
+        <span class='absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500'>
+        <i class='fas fa-hashtag'>
+        </i>
+    </span>
+<input type='text' id='fine-id' placeholder='请输入罚款ID' class='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all'/>
+    </div>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        读者ID
+    </label>
+<div class='relative'>
+        <span class='absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500'>
+        <i class='fas fa-user'>
+        </i>
+    </span>
+<input type='text' id='reader-id' placeholder='请输入读者ID' class='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all'/>
+    </div>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        罚款类型
+    </label>
+<select id='fine-type' class='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all appearance-none bg-white'>
+        <option value>
+        全部类型
+    </option>
+<option value='overdue'>
+        逾期罚款
+    </option>
+<option value='damage'>
+        图书损坏
+    </option>
+<option value='loss'>
+        图书遗失
+    </option>
+<option value='other'>
+        其他罚款
+    </option>
+    </select>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        缴费状态
+    </label>
+<select id='payment-status' class='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all appearance-none bg-white'>
+        <option value>
+        全部状态
+    </option>
+<option value='unpaid'>
+        未缴费
+    </option>
+<option value='paid'>
+        已缴费
+    </option>
+<option value='partially'>
+        部分缴费
+    </option>
+<option value='exempted'>
+        已减免
+    </option>
+    </select>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        罚款日期-开始
+    </label>
+<div class='relative'>
+        <span class='absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500'>
+        <i class='fas fa-calendar-alt'>
+        </i>
+    </span>
+<input type='date' id='start-date' class='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all'/>
+    </div>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        罚款日期-结束
+    </label>
+<div class='relative'>
+        <span class='absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500'>
+        <i class='fas fa-calendar-alt'>
+        </i>
+    </span>
+<input type='date' id='end-date' class='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all'/>
+    </div>
+    </div>
+    </div>
+<div class='flex justify-end mt-4 space-x-3'>
+        <button id='reset-btn' class='btn-scale bg-white border border-gray-300 text-secondary px-4 py-2 rounded-md text-sm'>
+        <i class='fas fa-redo-alt mr-1.5'>
+        </i>
+重置
+    </button>
+<button id='search-btn' class='btn-scale bg-primary text-white px-4 py-2 rounded-md text-sm'>
+        <i class='fas fa-search mr-1.5'>
+        </i>
+搜索
+    </button>
+    </div>
+    </div>
+<!-- 批量操作工具栏 -->
+<div class='bg-white p-3 shadow-sm mb-4 hidden' id='batch-toolbar'>
+        <div class='flex items-center justify-between'>
+        <div class='flex items-center space-x-3'>
+        <input type='checkbox' id='select-all' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary'/>
+<label for='select-all' class='text-sm'>
+        全选
+    </label>
+<span class='text-sm text-gray-500' id='selected-count'>
+        已选择: 0 条
+    </span>
+    </div>
+<div class='flex space-x-2'>
+        <button id='batch-confirm' class='btn-scale bg-success text-white px-3 py-1.5 rounded-md text-sm'>
+        <i class='fas fa-check-circle mr-1'>
+        </i>
+确认缴费
+    </button>
+<button id='batch-exempt' class='btn-scale bg-info text-white px-3 py-1.5 rounded-md text-sm'>
+        <i class='fas fa-percentage mr-1'>
+        </i>
+减免申请
+    </button>
+<button id='cancel-batch' class='btn-scale bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-sm'>
+        <i class='fas fa-times mr-1'>
+        </i>
+取消
+    </button>
+    </div>
+    </div>
+    </div>
+<!-- 罚款列表 -->
+<div class='bg-white shadow-sm rounded-lg overflow-hidden flex-grow'>
+        <div class='overflow-x-auto'>
+        <table class='min-w-full divide-y divide-gray-200'>
+        <thead class='bg-gray-50'>
+        <tr >
+        <th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12'>
+        <input type='checkbox' id='header-select-all' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary hidden' data-batch-checkbox/>
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        罚款ID
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        读者信息
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        借阅记录ID
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        罚款类型
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        罚款金额
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        罚款原因
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        罚款日期
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        缴费状态
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        缴费方式
+    </th>
+<th scope='col' class='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+        操作
+    </th>
+    </tr>
+    </thead>
+<tbody class='bg-white divide-y divide-gray-200' id='fine-list'>
+        <!-- 罚款记录行 -->
+<tr class='hover:bg-gray-50 transition-colors'>
+        <td class='px-4 py-3 whitespace-nowrap'>
+        <input type='checkbox' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary fine-checkbox hidden' data-batch-checkbox data-id='F20230001'/>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        F20230001
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <div class='text-sm'>
+        R202300123
+    </div>
+<div class='text-xs text-gray-500'>
+        张三
+    </div>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        B20230415001
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-yellow-100 text-yellow-800'>
+        逾期罚款
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        ¥2.50
+    </td>
+<td class='px-4 py-3 text-sm max-w-xs truncate'>
+        图书逾期未还，逾期天数5天
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        2023-04-20
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-red-100 text-red-800'>
+        未缴费
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        -
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm space-x-1'>
+        <button class='btn-scale text-primary hover:text-primary-dark' title='编辑'>
+        <i class='fas fa-edit'>
+        </i>
+    </button>
+<button class='btn-scale text-success hover:text-success/80 confirm-payment' title='确认缴费' data-id='F20230001'>
+        <i class='fas fa-check-circle'>
+        </i>
+    </button>
+<button class='btn-scale text-info hover:text-info/80 apply-exemption' title='减免申请' data-id='F20230001'>
+        <i class='fas fa-percentage'>
+        </i>
+    </button>
+    </td>
+    </tr>
+<tr class='hover:bg-gray-50 transition-colors'>
+        <td class='px-4 py-3 whitespace-nowrap'>
+        <input type='checkbox' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary fine-checkbox hidden' data-batch-checkbox data-id='F20230002'/>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        F20230002
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <div class='text-sm'>
+        R202300456
+    </div>
+<div class='text-xs text-gray-500'>
+        李四
+    </div>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        B20230322005
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-red-100 text-red-800'>
+        图书损坏
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        ¥35.00
+    </td>
+<td class='px-4 py-3 text-sm max-w-xs truncate'>
+        图书封面严重污损，影响二次借阅
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        2023-04-18
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-green-100 text-green-800'>
+        已缴费
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        微信支付
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm space-x-1'>
+        <button class='btn-scale text-primary hover:text-primary-dark' title='编辑'>
+        <i class='fas fa-edit'>
+        </i>
+    </button>
+<button class='btn-scale text-gray-400 cursor-not-allowed' title='已缴费' disabled>
+        <i class='fas fa-check-circle'>
+        </i>
+    </button>
+<button class='btn-scale text-gray-400 cursor-not-allowed' title='已缴费' disabled>
+        <i class='fas fa-percentage'>
+        </i>
+    </button>
+    </td>
+    </tr>
+<tr class='hover:bg-gray-50 transition-colors'>
+        <td class='px-4 py-3 whitespace-nowrap'>
+        <input type='checkbox' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary fine-checkbox hidden' data-batch-checkbox data-id='F20230003'/>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        F20230003
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <div class='text-sm'>
+        R202300789
+    </div>
+<div class='text-xs text-gray-500'>
+        王五
+    </div>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        B20230215003
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-purple-100 text-purple-800'>
+        图书遗失
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        ¥89.00
+    </td>
+<td class='px-4 py-3 text-sm max-w-xs truncate'>
+        图书遗失，按规定赔偿
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        2023-04-15
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-yellow-100 text-yellow-800'>
+        部分缴费
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        校园卡支付
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm space-x-1'>
+        <button class='btn-scale text-primary hover:text-primary-dark' title='编辑'>
+        <i class='fas fa-edit'>
+        </i>
+    </button>
+<button class='btn-scale text-success hover:text-success/80 confirm-payment' title='确认缴费' data-id='F20230003'>
+        <i class='fas fa-check-circle'>
+        </i>
+    </button>
+<button class='btn-scale text-info hover:text-info/80 apply-exemption' title='减免申请' data-id='F20230003'>
+        <i class='fas fa-percentage'>
+        </i>
+    </button>
+    </td>
+    </tr>
+<tr class='hover:bg-gray-50 transition-colors'>
+        <td class='px-4 py-3 whitespace-nowrap'>
+        <input type='checkbox' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary fine-checkbox hidden' data-batch-checkbox data-id='F20230004'/>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        F20230004
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <div class='text-sm'>
+        R202300456
+    </div>
+<div class='text-xs text-gray-500'>
+        李四
+    </div>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        B20230401007
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-yellow-100 text-yellow-800'>
+        逾期罚款
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        ¥1.00
+    </td>
+<td class='px-4 py-3 text-sm max-w-xs truncate'>
+        图书逾期未还，逾期天数2天
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        2023-04-10
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-blue-100 text-blue-800'>
+        已减免
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        -
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm space-x-1'>
+        <button class='btn-scale text-primary hover:text-primary-dark' title='编辑'>
+        <i class='fas fa-edit'>
+        </i>
+    </button>
+<button class='btn-scale text-gray-400 cursor-not-allowed' title='已减免' disabled>
+        <i class='fas fa-check-circle'>
+        </i>
+    </button>
+<button class='btn-scale text-gray-400 cursor-not-allowed' title='已减免' disabled>
+        <i class='fas fa-percentage'>
+        </i>
+    </button>
+    </td>
+    </tr>
+<tr class='hover:bg-gray-50 transition-colors'>
+        <td class='px-4 py-3 whitespace-nowrap'>
+        <input type='checkbox' class='w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary fine-checkbox hidden' data-batch-checkbox data-id='F20230005'/>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        F20230005
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <div class='text-sm'>
+        R202300123
+    </div>
+<div class='text-xs text-gray-500'>
+        张三
+    </div>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        B20230328012
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-red-100 text-red-800'>
+        图书损坏
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm font-medium'>
+        ¥15.00
+    </td>
+<td class='px-4 py-3 text-sm max-w-xs truncate'>
+        图书内页有缺页，影响阅读
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        2023-04-05
+    </td>
+<td class='px-4 py-3 whitespace-nowrap'>
+        <span class='badge bg-red-100 text-red-800'>
+        未缴费
+    </span>
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm'>
+        -
+    </td>
+<td class='px-4 py-3 whitespace-nowrap text-sm space-x-1'>
+        <button class='btn-scale text-primary hover:text-primary-dark' title='编辑'>
+        <i class='fas fa-edit'>
+        </i>
+    </button>
+<button class='btn-scale text-success hover:text-success/80 confirm-payment' title='确认缴费' data-id='F20230005'>
+        <i class='fas fa-check-circle'>
+        </i>
+    </button>
+<button class='btn-scale text-info hover:text-info/80 apply-exemption' title='减免申请' data-id='F20230005'>
+        <i class='fas fa-percentage'>
+        </i>
+    </button>
+    </td>
+    </tr>
+    </tbody>
+    </table>
+    </div>
+<!-- 分页控件 -->
+<div class='px-4 py-3 flex items-center justify-between border-t border-gray-200'>
+        <div class='flex-1 flex justify-between sm:hidden'>
+        <button class='btn-scale relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50'>
+        上一页
+    </button>
+<button class='btn-scale ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50'>
+        下一页
+    </button>
+    </div>
+<div class='hidden sm:flex-1 sm:flex sm:items-center sm:justify-between'>
+        <div >
+        <p class='text-sm text-gray-700'>
+        显示第
+<span class='font-medium'>
+        1
+    </span>
+到
+<span class='font-medium'>
+        5
+    </span>
+条，共
+<span class='font-medium'>
+        24
+    </span>
+条结果
+    </p>
+    </div>
+<div >
+        <nav class='relative z-0 inline-flex rounded-md shadow-sm -space-x-px' aria-label='Pagination'>
+        <button class='btn-scale relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50'>
+        <span class='sr-only'>
+        上一页
+    </span>
+<i class='fas fa-chevron-left'>
+        </i>
+    </button>
+<button class='btn-scale bg-primary text-white relative inline-flex items-center px-4 py-2 border border-primary text-sm font-medium'>
+        1
+    </button>
+<button class='btn-scale bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium'>
+        2
+    </button>
+<button class='btn-scale bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium'>
+        3
+    </button>
+<span class='relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700'>
+        ...
+    </span>
+<button class='btn-scale bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium'>
+        5
+    </button>
+<button class='btn-scale relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50'>
+        <span class='sr-only'>
+        下一页
+    </span>
+<i class='fas fa-chevron-right'>
+        </i>
+    </button>
+    </nav>
+    </div>
+    </div>
+    </div>
+    </div>
+<!-- 确认缴费弹窗 -->
+<div class='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden' id='payment-modal'>
+        <div class='bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all'>
+        <div class='p-5 border-b border-gray-200'>
+        <h3 class='text-lg font-bold text-gray-900'>
+        确认缴费
+    </h3>
+<button class='absolute top-4 right-4 text-gray-400 hover:text-gray-500' id='close-payment-modal'>
+        <i class='fas fa-times'>
+        </i>
+    </button>
+    </div>
+<div class='p-5'>
+        <div class='mb-4'>
+        <p class='text-sm text-gray-700 mb-3'>
+        请确认以下罚款记录的缴费信息：
+    </p>
+<div class='bg-gray-50 p-3 rounded-md mb-4' id='payment-info'>
+        <div class='text-sm mb-1'>
+        <span class='font-medium'>
+        罚款ID：
+    </span>
+<span id='payment-fine-id'>
+        F20230001
+    </span>
+    </div>
+<div class='text-sm mb-1'>
+        <span class='font-medium'>
+        读者ID：
+    </span>
+<span id='payment-reader-id'>
+        R202300123
+    </span>
+    </div>
+<div class='text-sm mb-1'>
+        <span class='font-medium'>
+        读者姓名：
+    </span>
+<span id='payment-reader-name'>
+        张三
+    </span>
+    </div>
+<div class='text-sm mb-1'>
+        <span class='font-medium'>
+        罚款金额：
+    </span>
+<span id='payment-amount' class='text-red-600 font-medium'>
+        ¥2.50
+    </span>
+    </div>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        缴费方式
+    </label>
+<select id='payment-method' class='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all'>
+        <option value='wechat'>
+        微信支付
+    </option>
+<option value='alipay'>
+        支付宝支付
+    </option>
+<option value='campus'>
+        校园卡支付
+    </option>
+<option value='cash'>
+        现金支付
+    </option>
+    </select>
+    </div>
+    </div>
+    </div>
+<div class='bg-gray-50 px-5 py-3 flex justify-end space-x-3 rounded-b-lg'>
+        <button class='btn-scale bg-white border border-gray-300 text-secondary px-4 py-2 rounded-md text-sm' id='cancel-payment'>
+        取消
+    </button>
+<button class='btn-scale bg-primary text-white px-4 py-2 rounded-md text-sm' id='confirm-payment'>
+        确认缴费
+    </button>
+    </div>
+    </div>
+    </div>
+<!-- 减免申请弹窗 -->
+<div class='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden' id='exemption-modal'>
+        <div class='bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all'>
+        <div class='p-5 border-b border-gray-200'>
+        <h3 class='text-lg font-bold text-gray-900'>
+        减免申请
+    </h3>
+<button class='absolute top-4 right-4 text-gray-400 hover:text-gray-500' id='close-exemption-modal'>
+        <i class='fas fa-times'>
+        </i>
+    </button>
+    </div>
+<div class='p-5'>
+        <div class='mb-4'>
+        <p class='text-sm text-gray-700 mb-3'>
+        请填写罚款减免申请理由：
+    </p>
+<div class='bg-gray-50 p-3 rounded-md mb-4' id='exemption-info'>
+        <div class='text-sm mb-1'>
+        <span class='font-medium'>
+        罚款ID：
+    </span>
+<span id='exemption-fine-id'>
+        F20230001
+    </span>
+    </div>
+<div class='text-sm mb-1'>
+        <span class='font-medium'>
+        罚款金额：
+    </span>
+<span id='exemption-amount' class='text-red-600 font-medium'>
+        ¥2.50
+    </span>
+    </div>
+    </div>
+<div class='mb-4'>
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        减免理由
+    </label>
+<textarea id='exemption-reason' rows='3' class='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all' placeholder='请详细说明申请减免的理由...'>
+        </textarea>
+    </div>
+<div >
+        <label class='block text-sm font-medium text-gray-700 mb-1'>
+        申请减免金额
+    </label>
+<input type='number' id='exemption-amount-input' min='0' step='0.01' class='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all'/>
+    </div>
+    </div>
+    </div>
+<div class='bg-gray-50 px-5 py-3 flex justify-end space-x-3 rounded-b-lg'>
+        <button class='btn-scale bg-white border border-gray-300 text-secondary px-4 py-2 rounded-md text-sm' id='cancel-exemption'>
+        取消
+    </button>
+<button class='btn-scale bg-primary text-white px-4 py-2 rounded-md text-sm' id='submit-exemption'>
+        提交申请
+    </button>
+    </div>
+    </div>
+    </div>
+<!-- 操作结果提示 -->
+<div class='fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center z-50' id='result-toast'>
+        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3' id='toast-icon-container'>
+        <i class='fas fa-check text-white' id='toast-icon'>
+        </i>
+    </div>
+<div >
+        <h4 class='font-medium text-gray-900' id='toast-title'>
+        操作成功
+    </h4>
+<p class='text-sm text-gray-500' id='toast-message'>
+        罚款缴费已确认
+    </p>
+    </div>
+<button class='ml-4 text-gray-400 hover:text-gray-500' id='close-toast'>
+        <i class='fas fa-times'>
+        </i>
+    </button>
+    </div>
+<script >// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function () {
+  // 通知父页面调整iframe大小
+  ytSendPageSize();
+
+  // 获取DOM元素
+  var batchToolbar = document.getElementById('batch-toolbar');
+  var batchHandleBtn = document.getElementById('batch-handle-btn');
+  var cancelBatchBtn = document.getElementById('cancel-batch');
+  var selectAllCheckbox = document.getElementById('select-all');
+  var headerSelectAllCheckbox = document.getElementById('header-select-all');
+  var fineCheckboxes = document.querySelectorAll('.fine-checkbox');
+  var selectedCountEl = document.getElementById('selected-count');
+  var confirmPaymentBtns = document.querySelectorAll('.confirm-payment');
+  var applyExemptionBtns = document.querySelectorAll('.apply-exemption');
+  var paymentModal = document.getElementById('payment-modal');
+  var exemptionModal = document.getElementById('exemption-modal');
+  var closePaymentModal = document.getElementById('close-payment-modal');
+  var closeExemptionModal = document.getElementById('close-exemption-modal');
+  var cancelPaymentBtn = document.getElementById('cancel-payment');
+  var cancelExemptionBtn = document.getElementById('cancel-exemption');
+  var confirmPaymentBtn = document.getElementById('confirm-payment');
+  var submitExemptionBtn = document.getElementById('submit-exemption');
+  var resultToast = document.getElementById('result-toast');
+  var closeToastBtn = document.getElementById('close-toast');
+  var toastIconContainer = document.getElementById('toast-icon-container');
+  var toastIcon = document.getElementById('toast-icon');
+  var toastTitle = document.getElementById('toast-title');
+  var toastMessage = document.getElementById('toast-message');
+  var batchConfirmBtn = document.getElementById('batch-confirm');
+  var batchExemptBtn = document.getElementById('batch-exempt');
+  var resetBtn = document.getElementById('reset-btn');
+  var searchBtn = document.getElementById('search-btn');
+
+  // 当前选中的罚款ID
+  var currentFineId = '';
+  // 选中的罚款ID列表
+  var selectedFineIds = new Set();
+
+  // 批量处理按钮点击事件
+  batchHandleBtn.addEventListener('click', function () {
+    batchToolbar.classList.remove('hidden');
+    // 显示所有复选框
+    document.querySelectorAll('[data-batch-checkbox]').forEach(function (checkbox) {
+      checkbox.classList.remove('hidden');
+    });
+    ytSendPageSize();
+  });
+
+  // 取消批量处理按钮点击事件
+  cancelBatchBtn.addEventListener('click', function () {
+    batchToolbar.classList.add('hidden');
+    // 隐藏所有复选框
+    document.querySelectorAll('[data-batch-checkbox]').forEach(function (checkbox) {
+      checkbox.classList.add('hidden');
+    });
+    // 清除选择状态
+    selectedFineIds.clear();
+    selectAllCheckbox.checked = false;
+    headerSelectAllCheckbox.checked = false;
+    fineCheckboxes.forEach(function (checkbox) {
+      checkbox.checked = false;
+    });
+    updateSelectedCount();
+    ytSendPageSize();
+  });
+
+  // 全选复选框点击事件
+  function handleSelectAll() {
+    var isChecked = selectAllCheckbox.checked;
+    headerSelectAllCheckbox.checked = isChecked;
+    fineCheckboxes.forEach(function (checkbox) {
+      checkbox.checked = isChecked;
+      var id = checkbox.getAttribute('data-id');
+      if (isChecked) {
+        selectedFineIds.add(id);
+      } else {
+        selectedFineIds.delete(id);
+      }
+    });
+    updateSelectedCount();
+  }
+
+  // 表头全选复选框点击事件
+  function handleHeaderSelectAll() {
+    var isChecked = headerSelectAllCheckbox.checked;
+    selectAllCheckbox.checked = isChecked;
+    fineCheckboxes.forEach(function (checkbox) {
+      checkbox.checked = isChecked;
+      var id = checkbox.getAttribute('data-id');
+      if (isChecked) {
+        selectedFineIds.add(id);
+      } else {
+        selectedFineIds.delete(id);
+      }
+    });
+    updateSelectedCount();
+  }
+
+  // 单个罚款记录复选框点击事件
+  function handleFineCheckboxChange(e) {
+    var checkbox = e.target;
+    var id = checkbox.getAttribute('data-id');
+    if (checkbox.checked) {
+      selectedFineIds.add(id);
+    } else {
+      selectedFineIds.delete(id);
+    }
+
+    // 更新全选框状态
+    var allChecked = fineCheckboxes.length > 0 && Array.from(fineCheckboxes).every(function (cb) {
+      return cb.checked;
+    });
+    selectAllCheckbox.checked = allChecked;
+    headerSelectAllCheckbox.checked = allChecked;
+    updateSelectedCount();
+  }
+
+  // 更新选中数量显示
+  function updateSelectedCount() {
+    selectedCountEl.textContent = "\u5DF2\u9009\u62E9:".concat(selectedFineIds.size, "\u6761");
+  }
+
+  // 确认缴费按钮点击事件
+  function handleConfirmPayment(e) {
+    currentFineId = e.currentTarget.getAttribute('data-id');
+    // 在实际应用中，这里应该根据ID获取罚款详情
+    // 这里简化处理，直接显示弹窗
+    paymentModal.classList.remove('hidden');
+  }
+
+  // 减免申请按钮点击事件
+  function handleApplyExemption(e) {
+    currentFineId = e.currentTarget.getAttribute('data-id');
+    // 在实际应用中，这里应该根据ID获取罚款详情
+    // 这里简化处理，直接显示弹窗
+    document.getElementById('exemption-fine-id').textContent = currentFineId;
+    document.getElementById('exemption-amount').textContent = '¥2.50';
+    document.getElementById('exemption-amount-input').value = '2.50';
+    exemptionModal.classList.remove('hidden');
+  }
+
+  // 关闭弹窗事件
+  function closeModal(modal) {
+    modal.classList.add('hidden');
+  }
+
+  // 显示操作结果提示
+  function showToast(isSuccess, title, message) {
+    // 设置提示样式
+    if (isSuccess) {
+      toastIconContainer.className = 'w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mr-3';
+      toastIcon.className = 'fas fa-check text-white';
+    } else {
+      toastIconContainer.className = 'w-8 h-8 rounded-full bg-red-500 flex items-center justify-center mr-3';
+      toastIcon.className = 'fas fa-exclamation-circle text-white';
+    }
+
+    // 设置提示内容
+    toastTitle.textContent = title;
+    toastMessage.textContent = message;
+
+    // 显示提示
+    resultToast.classList.remove('translate-y-20', 'opacity-0');
+
+    // 3秒后自动关闭
+    setTimeout(function () {
+      hideToast();
+    }, 3000);
+  }
+
+  // 隐藏操作结果提示
+  function hideToast() {
+    resultToast.classList.add('translate-y-20', 'opacity-0');
+  }
+
+  // 确认缴费处理
+  function processPayment() {
+    // 在实际应用中，这里应该发送请求到服务器处理缴费
+    // 这里简化处理，直接显示成功提示
+    closeModal(paymentModal);
+    showToast(true, '操作成功', '罚款缴费已确认');
+
+    // 更新罚款记录状态（实际应用中应该重新加载数据）
+    var fineRow = document.querySelector(".confirm-payment[data-id=\"".concat(currentFineId, "\"]")).closest('tr');
+    if (fineRow) {
+      // 更新缴费状态
+      var statusCell = fineRow.querySelector('td:nth-child(9)');
+      statusCell.innerHTML = '<span class="badge bg-green-100 text-green-800">已缴费</span>';
+
+      // 更新缴费方式
+      var methodCell = fineRow.querySelector('td:nth-child(10)');
+      var paymentMethod = document.getElementById('payment-method').value;
+      var methodText = {
+        'wechat': '微信支付',
+        'alipay': '支付宝支付',
+        'campus': '校园卡支付',
+        'cash': '现金支付'
+      }[paymentMethod] || paymentMethod;
+      methodCell.textContent = methodText;
+
+      // 禁用操作按钮
+      var actionCell = fineRow.querySelector('td:last-child');
+      var confirmBtn = actionCell.querySelector('.confirm-payment');
+      var exemptBtn = actionCell.querySelector('.apply-exemption');
+      if (confirmBtn) {
+        confirmBtn.classList.add('text-gray-400', 'cursor-not-allowed');
+        confirmBtn.disabled = true;
+        confirmBtn.removeEventListener('click', handleConfirmPayment);
+      }
+      if (exemptBtn) {
+        exemptBtn.classList.add('text-gray-400', 'cursor-not-allowed');
+        exemptBtn.disabled = true;
+        exemptBtn.removeEventListener('click', handleApplyExemption);
+      }
+    }
+    ytSendPageSize();
+  }
+
+  // 提交减免申请处理
+  function processExemption() {
+    var reason = document.getElementById('exemption-reason').value;
+    var amount = document.getElementById('exemption-amount-input').value;
+    if (!reason.trim()) {
+      showToast(false, '操作失败', '请填写减免理由');
+      return;
+    }
+    if (!amount || isNaN(amount) || parseFloat(amount) < 0) {
+      showToast(false, '操作失败', '请输入有效的减免金额');
+      return;
+    }
+
+    // 在实际应用中，这里应该发送请求到服务器处理减免申请
+    // 这里简化处理，直接显示成功提示
+    closeModal(exemptionModal);
+    showToast(true, '操作成功', '减免申请已提交，等待审核');
+    ytSendPageSize();
+  }
+
+  // 批量确认缴费
+  function batchConfirmPayment() {
+    if (selectedFineIds.size === 0) {
+      showToast(false, '操作失败', '请先选择需要处理的罚款记录');
+      return;
+    }
+
+    // 在实际应用中，这里应该发送请求到服务器批量处理缴费
+    // 这里简化处理，直接显示成功提示
+    showToast(true, '操作成功', "\u5DF2\u6279\u91CF\u786E\u8BA4".concat(selectedFineIds.size, "\u6761\u7F5A\u6B3E\u7F34\u8D39"));
+
+    // 重置批量选择状态
+    cancelBatchBtn.click();
+  }
+
+  // 批量减免申请
+  function batchApplyExemption() {
+    if (selectedFineIds.size === 0) {
+      showToast(false, '操作失败', '请先选择需要处理的罚款记录');
+      return;
+    }
+
+    // 在实际应用中，这里应该打开批量减免申请弹窗
+    // 这里简化处理，直接显示成功提示
+    showToast(true, '操作成功', "\u5DF2\u6279\u91CF\u63D0\u4EA4".concat(selectedFineIds.size, "\u6761\u51CF\u514D\u7533\u8BF7"));
+
+    // 重置批量选择状态
+    cancelBatchBtn.click();
+  }
+
+  // 重置搜索条件
+  function resetSearch() {
+    document.getElementById('fine-id').value = '';
+    document.getElementById('reader-id').value = '';
+    document.getElementById('fine-type').value = '';
+    document.getElementById('payment-status').value = '';
+    document.getElementById('start-date').value = '';
+    document.getElementById('end-date').value = '';
+    showToast(true, '操作成功', '搜索条件已重置');
+  }
+
+  // 执行搜索
+  function performSearch() {
+    // 在实际应用中，这里应该获取搜索条件并发送请求到服务器
+    // 这里简化处理，直接显示成功提示
+    showToast(true, '搜索成功', '已找到符合条件的罚款记录');
+    ytSendPageSize();
+  }
+
+  // 绑定事件监听器
+  selectAllCheckbox.addEventListener('change', handleSelectAll);
+  headerSelectAllCheckbox.addEventListener('change', handleHeaderSelectAll);
+  fineCheckboxes.forEach(function (checkbox) {
+    checkbox.addEventListener('change', handleFineCheckboxChange);
+  });
+  confirmPaymentBtns.forEach(function (btn) {
+    btn.addEventListener('click', handleConfirmPayment);
+  });
+  applyExemptionBtns.forEach(function (btn) {
+    btn.addEventListener('click', handleApplyExemption);
+  });
+  closePaymentModal.addEventListener('click', function () {
+    return closeModal(paymentModal);
+  });
+  closeExemptionModal.addEventListener('click', function () {
+    return closeModal(exemptionModal);
+  });
+  cancelPaymentBtn.addEventListener('click', function () {
+    return closeModal(paymentModal);
+  });
+  cancelExemptionBtn.addEventListener('click', function () {
+    return closeModal(exemptionModal);
+  });
+  confirmPaymentBtn.addEventListener('click', processPayment);
+  submitExemptionBtn.addEventListener('click', processExemption);
+  closeToastBtn.addEventListener('click', hideToast);
+  batchConfirmBtn.addEventListener('click', batchConfirmPayment);
+  batchExemptBtn.addEventListener('click', batchApplyExemption);
+  resetBtn.addEventListener('click', resetSearch);
+  searchBtn.addEventListener('click', performSearch);
+
+  // 点击空白处关闭弹窗
+  paymentModal.addEventListener('click', function (e) {
+    if (e.target === paymentModal) closeModal(paymentModal);
+  });
+  exemptionModal.addEventListener('click', function (e) {
+    if (e.target === exemptionModal) closeModal(exemptionModal);
+  });
+});
+
+// 当页面大小或者内容发生变化时，通知导航页面跳转iframe高度</script>
+    </body>
+    </html>

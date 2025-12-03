@@ -513,16 +513,22 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查登录状态
-            if (!StorageManager.isLoggedIn()) {
-                window.location.href = 'login.html';
-                return;
-            }
+            // 检查是否在SPA环境中运行
+            const isSPA = document.getElementById('appContent') !== null;
+            
+            // 如果不在SPA环境中，才执行原有的登录检查和初始化
+            if (!isSPA) {
+                // 检查登录状态
+                if (!StorageManager.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-            // 显示用户名
-            const userInfo = StorageManager.getUserInfo();
-            if (userInfo) {
-                document.title = `欢迎，${userInfo.name || userInfo.username} - 雀语图书馆`;
+                // 显示用户名
+                const userInfo = StorageManager.getUserInfo();
+                if (userInfo) {
+                    document.title = `欢迎，${userInfo.name || userInfo.username} - 雀语图书馆`;
+                }
             }
 
             // 初始化分页参数
@@ -532,29 +538,40 @@
             window.currentBooks = [];
 
             // 显示加载指示器
-            document.getElementById('loadingIndicator').classList.remove('hidden');
-            document.getElementById('bookGrid').classList.add('hidden');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const bookGrid = document.getElementById('bookGrid');
+            
+            if (loadingIndicator && bookGrid) {
+                loadingIndicator.classList.remove('hidden');
+                bookGrid.classList.add('hidden');
+            }
 
             // 初始化通知系统
             initNotificationSystem();
 
-            // 动态加载弹窗组件
-            fetch('components/modal.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('modalContainer').innerHTML = html;
-                    // 绑定事件
-                    bindEvents();
-                    // 加载第一页图书
-                    loadBooksPage(window.currentPage);
-                })
-                .catch(error => {
-                    console.error('加载弹窗组件失败:', error);
-                    // 即使弹窗组件加载失败，也要绑定事件
-                    bindEvents();
-                    // 加载第一页图书
-                    loadBooksPage(window.currentPage);
-                });
+            // 动态加载弹窗组件（如果不是在SPA环境中）
+            if (!isSPA) {
+                fetch('components/modal.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('modalContainer').innerHTML = html;
+                        // 绑定事件
+                        bindEvents();
+                        // 加载第一页图书
+                        loadBooksPage(window.currentPage);
+                    })
+                    .catch(error => {
+                        console.error('加载弹窗组件失败:', error);
+                        // 即使弹窗组件加载失败，也要绑定事件
+                        bindEvents();
+                        // 加载第一页图书
+                        loadBooksPage(window.currentPage);
+                    });
+            } else {
+                // 在SPA环境中直接绑定事件和加载内容
+                bindEvents();
+                loadBooksPage(window.currentPage);
+            }
         });
 
         // 初始化通知系统
