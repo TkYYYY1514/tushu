@@ -306,27 +306,60 @@
             }
             
             // 使用存储管理器验证用户
-            const storedUserInfo = StorageManager ? StorageManager.getUserInfo() : null;
+            let storedUserInfo = StorageManager ? StorageManager.getUserInfo() : null;
             
-            // 测试账号：test123 / test123
-            if ((storedUserInfo && storedUserInfo.account === account && storedUserInfo.password === password) || 
-                (account === 'test123' && password === 'test123')) {
+            // 如果没有存储的用户信息，尝试从localStorage直接获取
+            if (!storedUserInfo) {
+                try {
+                    const userInfoStr = localStorage.getItem('library_user_info');
+                    if (userInfoStr) {
+                        storedUserInfo = JSON.parse(userInfoStr);
+                    }
+                } catch (err) {
+                    console.error('解析用户信息失败:', err);
+                }
+            }
+            
+            // 测试账号：test123 / test123 或者验证存储的用户信息
+            // 检查是否有注册用户信息
+            let registeredUser = null;
+            try {
+                const registeredUserStr = localStorage.getItem('registered_user_' + account);
+                if (registeredUserStr) {
+                    registeredUser = JSON.parse(registeredUserStr);
+                }
+            } catch (err) {
+                console.error('解析注册用户信息失败:', err);
+            }
+            
+            if ((account === 'test123' && password === 'test123') || 
+                (storedUserInfo && storedUserInfo.account === account && storedUserInfo.password === password) ||
+                (registeredUser && registeredUser.account === account && registeredUser.password === password)) {
                 
                 // 登录成功，更新登录状态
                 if (StorageManager) {
                     // 如果是测试账号，保存用户信息
                     if (account === 'test123' && password === 'test123') {
-                        StorageManager.saveUserInfo({
+                        const defaultUser = {
                             account: 'test123',
                             password: 'test123',
                             username: '测试用户',
                             avatar: '',
-                            email: 'test@example.com'
-                        });
+                            email: 'test@example.com',
+                            userType: 'faculty'
+                        };
+                        StorageManager.saveUserInfo(defaultUser);
+                    } else if (registeredUser) {
+                        // 如果是注册用户，保存注册用户信息
+                        StorageManager.saveUserInfo(registeredUser);
                     } else {
+                        // 更新现有用户信息
                         StorageManager.saveUserInfo(storedUserInfo);
                     }
                 }
+                
+                // 设置登录状态
+                localStorage.setItem('library_is_logged_in', 'true');
                 
                 // 显示成功提示
                 showToast('登录成功！');
@@ -334,8 +367,12 @@
                 // 保存登录状态（如果选择记住我）
                 if (rememberMe.checked) {
                     localStorage.setItem('library_remember_me', 'true');
+                    localStorage.setItem('userAccount', account);
+                    localStorage.setItem('rememberAccount', 'true');
                 } else {
                     localStorage.removeItem('library_remember_me');
+                    localStorage.removeItem('userAccount');
+                    localStorage.removeItem('rememberAccount');
                 }
                 
                 // 跳转到图书页面

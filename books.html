@@ -58,6 +58,22 @@
             .modal-show {
                 transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             }
+            .animate-duration-700 {
+                animation-duration: 0.7s;
+            }
+            /* 消息卡片样式 */
+            .message-card {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                max-width: 300px;
+                transform: translateX(120%);
+                transition: transform 0.3s ease-out;
+            }
+            .message-card.show {
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
@@ -76,10 +92,24 @@
                 <button id="searchToggle" class="text-gray-600 hover:text-primary">
                     <i class="fas fa-search"></i>
                 </button>
-                <button id="notificationBtn" class="text-gray-600 hover:text-primary relative">
-                    <i class="fas fa-bell"></i>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
-                </button>
+                <div class="relative">
+                    <button id="notificationBtn" class="text-gray-600 hover:text-primary relative">
+                        <i class="fas fa-bell"></i>
+                        <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+                    </button>
+                    <!-- 通知面板 -->
+                    <div id="notificationPanel" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-20 hidden">
+                        <div class="p-4 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800">通知消息</h3>
+                        </div>
+                        <div id="notificationList" class="max-h-96 overflow-y-auto">
+                            <!-- 通知将通过JavaScript动态生成 -->
+                        </div>
+                        <div class="p-4 border-t border-gray-100 text-center">
+                            <button id="clearNotifications" class="text-sm text-gray-500 hover:text-primary">清空所有通知</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="relative">
                     <button id="userMenuBtn" class="flex items-center space-x-1 text-gray-600">
                         <i class="fas fa-user-circle text-xl"></i>
@@ -137,8 +167,14 @@
         </div>
 
         <!-- 加载指示器 -->
-        <div id="loadingIndicator" class="hidden py-8 flex justify-center">
-            <div class="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <div id="loadingIndicator" class="py-8 flex justify-center hidden">
+            <div class="text-center">
+                <div class="inline-block relative w-16 h-16 mb-4">
+                    <div class="absolute w-16 h-16 border-4 border-primary/30 rounded-full animate-spin"></div>
+                    <div class="absolute w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin animate-duration-700"></div>
+                </div>
+                <p class="text-gray-600">正在加载更多图书...</p>
+            </div>
         </div>
 
         <!-- 空状态 -->
@@ -146,30 +182,18 @@
             <i class="fas fa-book-open text-4xl text-gray-300 mb-4"></i>
             <p class="text-gray-500">暂无图书数据</p>
         </div>
-    </main>
-
-    <!-- 底部导航 -->
-    <footer class="bg-white fixed bottom-0 w-full border-t border-gray-200">
-        <div class="container mx-auto">
-            <div class="grid grid-cols-3 gap-1">
-                <a href="books.html" class="flex flex-col items-center py-2 text-primary">
-                    <i class="fas fa-home text-xl mb-1"></i>
-                    <span class="text-xs">首页</span>
-                </a>
-                <a href="borrowed.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
-                    <i class="fas fa-bookmark text-xl mb-1"></i>
-                    <span class="text-xs">借阅</span>
-                </a>
-                <a href="profile.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
-                    <i class="fas fa-user text-xl mb-1"></i>
-                    <span class="text-xs">我的</span>
-                </a>
-            </div>
+        
+        <!-- 底部提示 -->
+        <div id="noMoreBooks" class="py-6 text-center text-gray-500 text-sm hidden">
+            <p>没有更多图书了</p>
         </div>
-    </footer>
+    </main>
 
     <!-- 弹窗组件 -->
     <div id="modalContainer"></div>
+    
+    <!-- 消息卡片容器 -->
+    <div id="messageCardContainer"></div>
 
     <!-- 图书详情弹窗 -->
     <div id="bookModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-lg">
@@ -266,6 +290,201 @@
                 coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
                 totalCopies: 10,
                 availableCopies: 6
+            },
+            {
+                id: '7',
+                title: '代码大全',
+                author: '史蒂夫·迈克康奈尔',
+                isbn: '9787121011111',
+                category: '科技',
+                publisher: '电子工业出版社',
+                publishDate: '2006-03-01',
+                description: '这是一本完整的软件构建手册，涵盖了软件构建的各个层面，是程序员必读的经典著作。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 7,
+                availableCopies: 4
+            },
+            {
+                id: '8',
+                title: '重构：改善既有代码的设计',
+                author: '马丁·福勒',
+                isbn: '9787115275791',
+                category: '科技',
+                publisher: '人民邮电出版社',
+                publishDate: '2010-01-01',
+                description: '本书清晰揭示了重构的过程，给出了大量重构的实例和技巧，是改善代码质量的重要参考书。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 9,
+                availableCopies: 2
+            },
+            {
+                id: '9',
+                title: '黑客与画家',
+                author: '保罗·格雷厄姆',
+                isbn: '9787115275792',
+                category: '科技',
+                publisher: '人民邮电出版社',
+                publishDate: '2013-05-01',
+                description: '本书收录了硅谷创业之父Paul Graham的文集，主要介绍黑客即优秀程序员的爱好和动机。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 11,
+                availableCopies: 6
+            },
+            {
+                id: '10',
+                title: '算法导论',
+                author: '托马斯·科尔曼',
+                isbn: '9787111278568',
+                category: '科技',
+                publisher: '机械工业出版社',
+                publishDate: '2012-09-01',
+                description: '本书提供了对当代计算机算法研究的一个全面、综合性的介绍，是算法领域的经典教材。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 5,
+                availableCopies: 1
+            },
+            {
+                id: '11',
+                title: '活着',
+                author: '余华',
+                isbn: '9787544291171',
+                category: '文学',
+                publisher: '南海出版公司',
+                publishDate: '2017-06-01',
+                description: '本书讲述了主人公福贵一生的坎坷经历，展现了一个普通人在历史变迁中的命运。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 13,
+                availableCopies: 8
+            },
+            {
+                id: '12',
+                title: '三体',
+                author: '刘慈欣',
+                isbn: '9787544291172',
+                category: '科幻',
+                publisher: '重庆出版社',
+                publishDate: '2017-08-01',
+                description: '本书是刘慈欣创作的系列长篇科幻小说，讲述了地球文明与三体文明的接触和冲突。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 14,
+                availableCopies: 9
+            },
+            {
+                id: '13',
+                title: '明朝那些事儿',
+                author: '当年明月',
+                isbn: '9787544291173',
+                category: '历史',
+                publisher: '中国海关出版社',
+                publishDate: '2017-10-01',
+                description: '本书以幽默风趣的语言讲述了明朝276年的历史，让历史变得轻松有趣。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 16,
+                availableCopies: 11
+            },
+            {
+                id: '14',
+                title: '围城',
+                author: '钱钟书',
+                isbn: '9787544291174',
+                category: '文学',
+                publisher: '人民文学出版社',
+                publishDate: '2018-01-01',
+                description: '本书是钱钟书所著的长篇小说，被誉为现代中国最优秀的讽刺小说之一。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 10,
+                availableCopies: 5
+            },
+            {
+                id: '15',
+                title: '小王子',
+                author: '安托万·德·圣-埃克苏佩里',
+                isbn: '9787544291175',
+                category: '文学',
+                publisher: '人民文学出版社',
+                publishDate: '2018-03-01',
+                description: '本书是一部著名的儿童文学短篇小说，用浅显的语言写出了引人深思的哲理。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 18,
+                availableCopies: 13
+            },
+            {
+                id: '16',
+                title: '经济学原理',
+                author: '曼昆',
+                isbn: '9787544291176',
+                category: '经济',
+                publisher: '北京大学出版社',
+                publishDate: '2018-05-01',
+                description: '本书是经济学入门的经典教材，系统介绍了经济学的基本原理和分析方法。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 12,
+                availableCopies: 7
+            },
+            {
+                id: '17',
+                title: '时间简史',
+                author: '史蒂芬·霍金',
+                isbn: '9787544291177',
+                category: '科学',
+                publisher: '湖南科学技术出版社',
+                publishDate: '2018-07-01',
+                description: '本书介绍了宇宙的起源、发展和未来，是霍金的代表作之一。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 9,
+                availableCopies: 4
+            },
+            {
+                id: '18',
+                title: '1984',
+                author: '乔治·奥威尔',
+                isbn: '9787544291178',
+                category: '文学',
+                publisher: '译林出版社',
+                publishDate: '2018-09-01',
+                description: '本书是一部反乌托邦小说，描绘了一个令人窒息的极权主义社会。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 11,
+                availableCopies: 6
+            },
+            {
+                id: '19',
+                title: '红楼梦',
+                author: '曹雪芹',
+                isbn: '9787544291179',
+                category: '文学',
+                publisher: '人民文学出版社',
+                publishDate: '2018-11-01',
+                description: '本书是中国古典四大名著之一，以贾、史、王、薛四大家族的兴衰为背景。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 15,
+                availableCopies: 10
+            },
+            {
+                id: '20',
+                title: '西游记',
+                author: '吴承恩',
+                isbn: '9787544291180',
+                category: '文学',
+                publisher: '人民文学出版社',
+                publishDate: '2019-01-01',
+                description: '本书是中国古典四大名著之一，讲述了孙悟空、猪八戒、沙僧保护唐僧西天取经的故事。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 17,
+                availableCopies: 12
+            },
+            {
+                id: '21',
+                title: '水浒传',
+                author: '施耐庵',
+                isbn: '9787544291181',
+                category: '文学',
+                publisher: '人民文学出版社',
+                publishDate: '2019-03-01',
+                description: '本书是中国古典四大名著之一，描写北宋末年以宋江为首的一百零八位好汉在梁山起义的故事。',
+                coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                totalCopies: 14,
+                availableCopies: 9
             }
         ];
 
@@ -286,39 +505,266 @@
         const modalContent = document.getElementById('modalContent');
         const closeModal = document.getElementById('closeModal');
         const categoryNav = document.getElementById('categoryNav');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationList = document.getElementById('notificationList');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const clearNotifications = document.getElementById('clearNotifications');
 
         // 页面加载完成后初始化
-    document.addEventListener('DOMContentLoaded', function() {
-        // 检查登录状态
-        if (!StorageManager.isLoggedIn()) {
-            window.location.href = 'login.html';
-            return;
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            if (!StorageManager.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 显示用户名
+            const userInfo = StorageManager.getUserInfo();
+            if (userInfo) {
+                document.title = `欢迎，${userInfo.name || userInfo.username} - 雀语图书馆`;
+            }
+
+            // 初始化分页参数
+            window.currentPage = 1;
+            window.booksPerPage = 6;
+            window.allBooks = booksData;
+            window.currentBooks = [];
+
+            // 显示加载指示器
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('bookGrid').classList.add('hidden');
+
+            // 初始化通知系统
+            initNotificationSystem();
+
+            // 动态加载弹窗组件
+            fetch('components/modal.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                    // 绑定事件
+                    bindEvents();
+                    // 加载第一页图书
+                    loadBooksPage(window.currentPage);
+                })
+                .catch(error => {
+                    console.error('加载弹窗组件失败:', error);
+                    // 即使弹窗组件加载失败，也要绑定事件
+                    bindEvents();
+                    // 加载第一页图书
+                    loadBooksPage(window.currentPage);
+                });
+        });
+
+        // 初始化通知系统
+        function initNotificationSystem() {
+            // 获取存储的通知
+            let notifications = getNotifications();
+            
+            // 如果没有通知，则添加一些默认通知
+            if (notifications.length === 0) {
+                notifications = [
+                    {
+                        id: 1,
+                        title: '欢迎使用图书馆系统',
+                        message: '感谢您使用雀语图书馆管理系统，祝您阅读愉快！',
+                        type: 'info',
+                        timestamp: new Date().toISOString(),
+                        read: false
+                    },
+                    {
+                        id: 2,
+                        title: '新书推荐',
+                        message: '《JavaScript高级程序设计》第四版现已入库，欢迎借阅！',
+                        type: 'info',
+                        timestamp: new Date(Date.now() - 86400000).toISOString(), // 昨天
+                        read: false
+                    }
+                ];
+                saveNotifications(notifications);
+            }
+            
+            // 更新通知徽章
+            updateNotificationBadge(notifications);
+            
+            // 渲染通知列表
+            renderNotifications(notifications);
         }
 
-        // 显示用户名
-        const userInfo = StorageManager.getUserInfo();
-        if (userInfo) {
-            document.title = `欢迎，${userInfo.username} - 雀语图书馆`;
+        // 获取通知
+        function getNotifications() {
+            try {
+                const notifications = localStorage.getItem('library_notifications');
+                return notifications ? JSON.parse(notifications) : [];
+            } catch (error) {
+                console.error('获取通知失败:', error);
+                return [];
+            }
         }
 
-        // 动态加载弹窗组件
-        fetch('components/modal.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('modalContainer').innerHTML = html;
-                // 绑定事件
-                bindEvents();
-                // 渲染图书
-                renderBooks(booksData);
-            })
-            .catch(error => {
-                console.error('加载弹窗组件失败:', error);
-                // 即使弹窗组件加载失败，也要绑定事件
-                bindEvents();
-                // 渲染图书
-                renderBooks(booksData);
+        // 保存通知
+        function saveNotifications(notifications) {
+            try {
+                localStorage.setItem('library_notifications', JSON.stringify(notifications));
+                return true;
+            } catch (error) {
+                console.error('保存通知失败:', error);
+                return false;
+            }
+        }
+
+        // 添加通知
+        function addNotification(title, message, type = 'info') {
+            const notifications = getNotifications();
+            
+            const notification = {
+                id: Date.now(),
+                title: title,
+                message: message,
+                type: type,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            notifications.unshift(notification);
+            saveNotifications(notifications);
+            updateNotificationBadge(notifications);
+            renderNotifications(notifications);
+        }
+
+        // 更新通知徽章
+        function updateNotificationBadge(notifications) {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            
+            if (unreadCount > 0) {
+                notificationBadge.textContent = unreadCount;
+                notificationBadge.classList.remove('hidden');
+            } else {
+                notificationBadge.classList.add('hidden');
+            }
+        }
+
+        // 渲染通知列表
+        function renderNotifications(notifications) {
+            if (!notificationList) return;
+            
+            notificationList.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                notificationList.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        <i class="fas fa-bell-slash text-2xl mb-2"></i>
+                        <p>暂无通知</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            notifications.forEach(notification => {
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${notification.read ? '' : 'bg-blue-50'}`;
+                notificationElement.dataset.id = notification.id;
+                
+                // 格式化时间
+                const date = new Date(notification.timestamp);
+                const timeString = `${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                
+                // 根据类型设置图标和颜色
+                let icon = '';
+                let iconColor = '';
+                switch(notification.type) {
+                    case 'overdue':
+                        icon = '<i class="fas fa-exclamation-circle text-red-500"></i>';
+                        iconColor = 'text-red-500';
+                        break;
+                    case 'info':
+                        icon = '<i class="fas fa-info-circle text-blue-500"></i>';
+                        iconColor = 'text-blue-500';
+                        break;
+                    case 'success':
+                        icon = '<i class="fas fa-check-circle text-green-500"></i>';
+                        iconColor = 'text-green-500';
+                        break;
+                    default:
+                        icon = '<i class="fas fa-bell text-gray-500"></i>';
+                        iconColor = 'text-gray-500';
+                }
+                
+                notificationElement.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="mr-3 mt-1">${icon}</div>
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-medium text-gray-800 ${iconColor}">${notification.title}</h4>
+                                <span class="text-xs text-gray-500">${timeString}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                        </div>
+                    </div>
+                `;
+                
+                notificationList.appendChild(notificationElement);
+                
+                // 添加点击事件标记为已读
+                notificationElement.addEventListener('click', function() {
+                    markNotificationAsRead(notification.id);
+                });
             });
-    });
+        }
+
+        // 标记通知为已读
+        function markNotificationAsRead(id) {
+            const notifications = getNotifications();
+            const index = notifications.findIndex(n => n.id == id);
+            
+            if (index !== -1) {
+                notifications[index].read = true;
+                saveNotifications(notifications);
+                updateNotificationBadge(notifications);
+                renderNotifications(notifications);
+            }
+        }
+
+        // 清空所有通知
+        function clearAllNotifications() {
+            saveNotifications([]);
+            updateNotificationBadge([]);
+            renderNotifications([]);
+        }
+
+        // 检查逾期书籍并发送通知
+        function checkOverdueBooksAndNotify() {
+            const borrowedBooks = StorageManager.getBorrowedBooks();
+            const today = new Date();
+            
+            borrowedBooks.forEach(book => {
+                if (!book.returned) {
+                    const dueDate = new Date(book.dueDate);
+                    // 如果逾期且之前没有发送过通知
+                    if (dueDate < today) {
+                        const timeDiff = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+                        const fine = (timeDiff * 0.5).toFixed(1);
+                        
+                        // 检查是否已经发送过通知
+                        const notifications = getNotifications();
+                        const existingNotification = notifications.find(n => 
+                            n.type === 'overdue' && 
+                            n.message.includes(book.bookTitle) && 
+                            n.message.includes(`逾期${timeDiff}天`)
+                        );
+                        
+                        if (!existingNotification) {
+                            addNotification(
+                                '图书逾期提醒', 
+                                `《${book.bookTitle}》已逾期${timeDiff}天，当前产生罚款¥${fine}，请尽快前往图书馆归还`,
+                                'overdue'
+                            );
+                        }
+                    }
+                }
+            });
+        }
 
         // 绑定事件
         function bindEvents() {
@@ -344,32 +790,37 @@
             clearSearch.addEventListener('click', function() {
                 searchInput.value = '';
                 clearSearch.classList.add('hidden');
-                renderBooks(booksData);
+                // 重置为全部图书并重新分页
+                window.allBooks = booksData;
+                window.currentPage = 1;
+                window.currentBooks = [];
+                document.getElementById('bookGrid').innerHTML = '';
+                loadBooksPage(window.currentPage);
             });
 
             // 关闭模态框
-        closeModal.addEventListener('click', function() {
-            closeModalHandler();
-        });
-
-        // 点击模态框外部关闭
-        bookModal.addEventListener('click', function(e) {
-            if (e.target === bookModal) {
+            closeModal.addEventListener('click', function() {
                 closeModalHandler();
-            }
-        });
-        
-        // 关闭模态框处理函数
-        function closeModalHandler() {
-            const modalDialog = bookModal.querySelector('div');
-            modalDialog.classList.remove('scale-100', 'opacity-100');
-            modalDialog.classList.add('scale-95', 'opacity-0');
+            });
+
+            // 点击模态框外部关闭
+            bookModal.addEventListener('click', function(e) {
+                if (e.target === bookModal) {
+                    closeModalHandler();
+                }
+            });
             
-            // 延迟隐藏整个模态框以允许动画完成
-            setTimeout(() => {
-                bookModal.classList.add('hidden');
-            }, 300);
-        }
+            // 关闭模态框处理函数
+            function closeModalHandler() {
+                const modalDialog = bookModal.querySelector('div');
+                modalDialog.classList.remove('scale-100', 'opacity-100');
+                modalDialog.classList.add('scale-95', 'opacity-0');
+                
+                // 延迟隐藏整个模态框以允许动画完成
+                setTimeout(() => {
+                    bookModal.classList.add('hidden');
+                }, 300);
+            }
 
             // 分类导航点击
             categoryNav.addEventListener('click', function(e) {
@@ -384,16 +835,164 @@
                     e.target.classList.remove('text-gray-600');
                     e.target.classList.add('text-primary', 'border-b-2', 'border-primary');
                     
-                    // 根据分类过滤图书
+                    // 根据分类过滤图书并重置分页
                     const category = e.target.textContent;
                     if (category === '全部') {
-                        renderBooks(booksData);
+                        window.allBooks = booksData;
                     } else {
-                        const filtered = booksData.filter(book => book.category === category);
-                        renderBooks(filtered);
+                        window.allBooks = booksData.filter(book => book.category === category);
+                    }
+                    
+                    // 重置分页状态
+                    window.currentPage = 1;
+                    window.currentBooks = [];
+                    document.getElementById('bookGrid').innerHTML = '';
+                    
+                    // 显示加载指示器
+                    document.getElementById('loadingIndicator').classList.remove('hidden');
+                    document.getElementById('bookGrid').classList.add('hidden');
+                    
+                    // 加载第一页
+                    loadBooksPage(window.currentPage);
+                }
+            });
+            
+            // 通知按钮点击事件
+            notificationBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationPanel.classList.toggle('hidden');
+                
+                // 如果面板展开，标记所有通知为已读
+                if (!notificationPanel.classList.contains('hidden')) {
+                    const notifications = getNotifications();
+                    let hasUnread = false;
+                    notifications.forEach(notification => {
+                        if (!notification.read) {
+                            hasUnread = true;
+                            notification.read = true;
+                        }
+                    });
+                    
+                    if (hasUnread) {
+                        saveNotifications(notifications);
+                        updateNotificationBadge(notifications);
+                        renderNotifications(notifications);
                     }
                 }
             });
+            
+            // 点击面板外部关闭通知面板
+            document.addEventListener('click', function(e) {
+                if (!notificationPanel.contains(e.target) && e.target !== notificationBtn) {
+                    notificationPanel.classList.add('hidden');
+                }
+            });
+            
+            // 清空通知按钮
+            clearNotifications.addEventListener('click', function() {
+                clearAllNotifications();
+            });
+            
+            // 添加滚动事件监听器
+            window.addEventListener('scroll', handleScroll);
+            
+            // 页面加载完成后检查逾期书籍
+            checkOverdueBooksAndNotify();
+            
+            // 添加一些默认通知作为示例
+            addSampleNotifications();
+        }
+
+        // 处理滚动事件
+        function handleScroll() {
+            // 检查是否滚动到底部附近
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            
+            // 当距离底部100像素时加载更多
+            if (scrollTop + windowHeight >= documentHeight - 100) {
+                // 防止多次触发
+                if (!window.loading) {
+                    window.loading = true;
+                    loadBooksPage(window.currentPage + 1);
+                }
+            }
+        }
+        
+        // 加载指定页码的图书
+        function loadBooksPage(page) {
+            // 检查是否还有更多图书
+            const startIndex = (page - 1) * window.booksPerPage;
+            
+            if (startIndex >= window.allBooks.length) {
+                // 没有更多图书了
+                window.loading = false;
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                document.getElementById('bookGrid').classList.remove('hidden');
+                // 显示没有更多图书的提示
+                if (window.currentBooks.length > 0) {
+                    document.getElementById('noMoreBooks').classList.remove('hidden');
+                }
+                return;
+            }
+            
+            // 显示加载指示器（除了第一页）
+            if (page > 1) {
+                document.getElementById('loadingIndicator').classList.remove('hidden');
+                document.getElementById('noMoreBooks').classList.add('hidden');
+            }
+            
+            // 计算结束索引
+            const endIndex = Math.min(startIndex + window.booksPerPage, window.allBooks.length);
+            const booksToShow = window.allBooks.slice(startIndex, endIndex);
+            
+            // 模拟网络延迟
+            setTimeout(() => {
+                window.currentBooks = window.currentBooks.concat(booksToShow);
+                renderBooks(window.currentBooks);
+                
+                // 更新当前页码
+                window.currentPage = page;
+                window.loading = false;
+                
+                // 隐藏加载指示器
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                document.getElementById('bookGrid').classList.remove('hidden');
+                
+                // 如果已经加载完所有图书，显示底部提示
+                if (window.currentBooks.length >= window.allBooks.length) {
+                    document.getElementById('noMoreBooks').classList.remove('hidden');
+                }
+            }, 500); // 模拟500毫秒的加载时间
+        }
+        
+        // 过滤图书
+        function filterBooks(keyword) {
+            // 显示加载指示器
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('bookGrid').classList.add('hidden');
+            document.getElementById('noMoreBooks').classList.add('hidden');
+            
+            // 重置分页状态
+            window.currentPage = 1;
+            window.currentBooks = [];
+            document.getElementById('bookGrid').innerHTML = '';
+            
+            // 模拟搜索延迟
+            setTimeout(() => {
+                const filtered = booksData.filter(book => 
+                    book.title.toLowerCase().includes(keyword.toLowerCase()) ||
+                    book.author.toLowerCase().includes(keyword.toLowerCase()) ||
+                    book.category.toLowerCase().includes(keyword.toLowerCase())
+                );
+                
+                // 更新全局图书列表
+                window.allBooks = filtered;
+                
+                // 加载第一页
+                loadBooksPage(window.currentPage);
+            }, 300); // 模拟300毫秒的搜索时间
         }
 
         // 渲染图书
@@ -459,16 +1058,6 @@
                     showBookDetails(book);
                 });
             });
-        }
-
-        // 过滤图书
-        function filterBooks(keyword) {
-            const filtered = booksData.filter(book => 
-                book.title.toLowerCase().includes(keyword.toLowerCase()) ||
-                book.author.toLowerCase().includes(keyword.toLowerCase()) ||
-                book.category.toLowerCase().includes(keyword.toLowerCase())
-            );
-            renderBooks(filtered);
         }
 
         // 显示图书详情
@@ -557,153 +1146,57 @@
             }, 10);
         }
 
-        // 处理借阅
-        function handleBorrow(bookId) {
-            const book = booksData.find(b => b.id === bookId);
-            if (!book) {
-                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                    GlobalModalManager.message('未找到该图书');
-                } else {
-                    alert('未找到该图书');
-                }
-                return;
-            }
-            
-            if (book.availableCopies <= 0) {
-                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                    GlobalModalManager.message('该图书已借完');
-                } else {
-                    alert('该图书已借完');
-                }
-                return;
-            }
-            
-            // 确认借阅
-            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
-                GlobalModalManager.show(`确定要借阅《${book.title}》吗？`, function() {
-                
-                    // 创建借阅记录
-                    const borrowedBooks = StorageManager.getBorrowedBooks();
-                    const borrowRecord = {
-                        bookId: book.id,
-                        bookTitle: book.title,
-                        borrowDate: new Date().toISOString().split('T')[0],
-                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30天后到期
-                        returned: false
-                    };
-                    
-                    borrowedBooks.push(borrowRecord);
-                    StorageManager.saveBorrowedBooks(borrowedBooks);
-                    
-                    // 更新图书库存
-                    book.availableCopies--;
-                    
-                    // 重新渲染
-                    const keyword = searchInput.value.trim();
-                    if (keyword) {
-                        filterBooks(keyword);
-                    } else {
-                        renderBooks(booksData);
-                    }
-                    
-                    // 关闭模态框并提示
-                    bookModal.classList.add('hidden');
-                    GlobalModalManager.message(`《${book.title}》借阅成功！请在${borrowRecord.dueDate}前归还。`);
-                });
-            } else {
-                if (confirm(`确定要借阅《${book.title}》吗？`)) {
-                    // 创建借阅记录
-                    const borrowedBooks = StorageManager.getBorrowedBooks();
-                    const borrowRecord = {
-                        bookId: book.id,
-                        bookTitle: book.title,
-                        borrowDate: new Date().toISOString().split('T')[0],
-                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30天后到期
-                        returned: false
-                    };
-                    
-                    borrowedBooks.push(borrowRecord);
-                    StorageManager.saveBorrowedBooks(borrowedBooks);
-                    
-                    // 更新图书库存
-                    book.availableCopies--;
-                    
-                    // 重新渲染
-                    const keyword = searchInput.value.trim();
-                    if (keyword) {
-                        filterBooks(keyword);
-                    } else {
-                        renderBooks(booksData);
-                    }
-                    
-                    // 关闭模态框并提示
-                    bookModal.classList.add('hidden');
-                    alert(`《${book.title}》借阅成功！请在${borrowRecord.dueDate}前归还。`);
-                }
-            }
-        }
-        
         // 处理预约
         function handleReserve(bookId) {
             const book = booksData.find(b => b.id === bookId);
             if (!book) {
-                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                    GlobalModalManager.message('未找到该图书');
-                } else {
-                    alert('未找到该图书');
-                }
+                showMessageCard('未找到该图书', 'error');
+                return;
+            }
+            
+            // 检查用户借阅和预约限制
+            const userLimit = StorageManager.getUserLimit();
+            const borrowedBooks = StorageManager.getBorrowedBooks();
+            const reservations = StorageManager.getReservations();
+            const currentCount = borrowedBooks.length + reservations.filter(r => !r.completed).length;
+            
+            if (currentCount >= userLimit) {
+                const userType = StorageManager.getUserInfo().userType === 'faculty' ? '教职工' : '学生';
+                showMessageCard(`${userType}最多可借阅/预约 ${userLimit} 本书籍，您已达到上限`, 'error');
                 return;
             }
             
             // 检查是否已经预约过这本书
-            const reservations = StorageManager.getReservations();
             const existingReservation = reservations.find(r => r.bookId === bookId && !r.completed);
             if (existingReservation) {
-                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                    GlobalModalManager.message('您已经预约过这本书，请前往图书馆办理借阅手续');
-                } else {
-                    alert('您已经预约过这本书，请前往图书馆办理借阅手续');
-                }
+                showMessageCard('您已经预约过这本书，请前往图书馆办理借阅手续', 'info');
                 return;
             }
             
             // 确认预约
-            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
-                GlobalModalManager.show(`确定要预约《${book.title}》吗？预约成功后请前往图书馆办理借阅手续。`, function() {
+            showMessageCardWithConfirm(`确定要预约《${book.title}》吗？`, 'info', () => {
+                // 创建预约记录
+                const reservationRecord = {
+                    bookId: book.id,
+                    bookTitle: book.title,
+                    reserveDate: new Date().toISOString().split('T')[0],
+                    completed: false
+                };
                 
-                    // 创建预约记录
-                    const reservationRecord = {
-                        bookId: book.id,
-                        bookTitle: book.title,
-                        reserveDate: new Date().toISOString().split('T')[0],
-                        completed: false
-                    };
-                    
-                    reservations.push(reservationRecord);
-                    StorageManager.saveReservations(reservations);
-                    
-                    // 关闭模态框并提示
-                    bookModal.classList.add('hidden');
-                    GlobalModalManager.message(`《${book.title}》预约成功！请前往图书馆办理借阅手续。`);
-                });
-            } else {
-                if (confirm(`确定要预约《${book.title}》吗？预约成功后请前往图书馆办理借阅手续。`)) {
-                    // 创建预约记录
-                    const reservationRecord = {
-                        bookId: book.id,
-                        bookTitle: book.title,
-                        reserveDate: new Date().toISOString().split('T')[0],
-                        completed: false
-                    };
-                    
-                    reservations.push(reservationRecord);
-                    StorageManager.saveReservations(reservations);
-                    
-                    // 关闭模态框并提示
-                    bookModal.classList.add('hidden');
-                    alert(`《${book.title}》预约成功！请前往图书馆办理借阅手续。`);
-                }
-            }
+                reservations.push(reservationRecord);
+                StorageManager.saveReservations(reservations);
+                
+                // 关闭模态框并提示
+                bookModal.classList.add('hidden');
+                showMessageCard(`《${book.title}》预约成功！请前往图书馆办理借阅手续。`, 'success');
+                
+                // 发送预约成功通知
+                addNotification(
+                    '预约成功', 
+                    `《${book.title}》预约成功，请在7天内前往图书馆办理借阅手续`,
+                    'success'
+                );
+            });
         }
         
         // 处理收藏
@@ -713,21 +1206,112 @@
             
             if (bookIndex > -1) {
                 // 取消收藏
-                favorites.splice(bookIndex, 1);
+                showMessageCardWithConfirm('确定要取消收藏这本书吗？', 'warning', () => {
+                    favorites.splice(bookIndex, 1);
+                    StorageManager.saveFavoriteBooks(favorites);
+                    showMessageCard('已取消收藏', 'success');
+                });
             } else {
                 // 添加收藏
                 favorites.push(bookId);
+                StorageManager.saveFavoriteBooks(favorites);
+                showMessageCard('已添加到收藏', 'success');
+            }
+        }
+        
+        // 显示带确认按钮的消息卡片
+        function showMessageCardWithConfirm(message, type, onConfirm) {
+            // 创建消息卡片元素
+            const messageCard = document.createElement('div');
+            messageCard.className = 'message-card';
+            
+            // 根据消息类型设置样式
+            let icon = '';
+            let bgColor = '';
+            let textColor = '';
+            
+            switch(type) {
+                case 'success':
+                    icon = '<i class="fas fa-check-circle"></i>';
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-exclamation-circle"></i>';
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    break;
+                case 'warning':
+                    icon = '<i class="fas fa-exclamation-triangle"></i>';
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-white';
+                    break;
+                case 'info':
+                default:
+                    icon = '<i class="fas fa-info-circle"></i>';
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    break;
             }
             
-            StorageManager.saveFavoriteBooks(favorites);
+            messageCard.innerHTML = `
+                <div class="rounded-lg shadow-lg ${bgColor} ${textColor} p-4 flex flex-col">
+                    <div class="flex items-start mb-3">
+                        <div class="mr-3 text-xl">${icon}</div>
+                        <div class="flex-1">${message}</div>
+                        <button class="ml-3 text-xl opacity-75 hover:opacity-100 focus:outline-none message-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="flex space-x-2 justify-end">
+                        <button class="cancel-btn px-4 py-2 bg-white/20 rounded hover:bg-white/30 transition-colors">
+                            取消
+                        </button>
+                        <button class="confirm-btn px-4 py-2 bg-white text-gray-800 rounded hover:bg-gray-100 transition-colors font-medium">
+                            确认
+                        </button>
+                    </div>
+                </div>
+            `;
             
-            // 显示提示
-            const isFavorited = bookIndex === -1;
-            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                GlobalModalManager.message(isFavorited ? '已添加到收藏' : '已取消收藏');
-            } else {
-                alert(isFavorited ? '已添加到收藏' : '已取消收藏');
-            }
+            // 添加到消息容器
+            document.getElementById('messageCardContainer').appendChild(messageCard);
+            
+            // 显示动画
+            setTimeout(() => {
+                messageCard.classList.add('show');
+            }, 10);
+            
+            // 绑定关闭事件
+            const closeBtn = messageCard.querySelector('.message-close');
+            closeBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                }, 300);
+            });
+            
+            // 绑定取消按钮事件
+            const cancelBtn = messageCard.querySelector('.cancel-btn');
+            cancelBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                }, 300);
+            });
+            
+            // 绑定确认按钮事件
+            const confirmBtn = messageCard.querySelector('.confirm-btn');
+            confirmBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                    // 执行确认操作
+                    if (onConfirm && typeof onConfirm === 'function') {
+                        onConfirm();
+                    }
+                }, 300);
+            });
         }
         
         // 检查图书是否已被收藏
@@ -755,6 +1339,117 @@
                 }
             }
         }
+        
+        // 显示消息卡片
+        function showMessageCard(message, type = 'info') {
+            // 创建消息卡片元素
+            const messageCard = document.createElement('div');
+            messageCard.className = 'message-card';
+            
+            // 根据消息类型设置样式
+            let icon = '';
+            let bgColor = '';
+            let textColor = '';
+            
+            switch(type) {
+                case 'success':
+                    icon = '<i class="fas fa-check-circle"></i>';
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-exclamation-circle"></i>';
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    break;
+                case 'info':
+                default:
+                    icon = '<i class="fas fa-info-circle"></i>';
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    break;
+            }
+            
+            messageCard.innerHTML = `
+                <div class="rounded-lg shadow-lg ${bgColor} ${textColor} p-4 flex items-start">
+                    <div class="mr-3 text-xl">${icon}</div>
+                    <div class="flex-1">${message}</div>
+                    <button class="ml-3 text-xl opacity-75 hover:opacity-100 focus:outline-none message-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // 添加到消息容器
+            document.getElementById('messageCardContainer').appendChild(messageCard);
+            
+            // 显示动画
+            setTimeout(() => {
+                messageCard.classList.add('show');
+            }, 10);
+            
+            // 绑定关闭事件
+            const closeBtn = messageCard.querySelector('.message-close');
+            closeBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                }, 300);
+            });
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (messageCard.parentNode) {
+                    messageCard.classList.remove('show');
+                    setTimeout(() => {
+                        messageCard.remove();
+                    }, 300);
+                }
+            }, 3000);
+        }
+        
+        // 添加示例通知
+        function addSampleNotifications() {
+            // 检查是否已有示例通知
+            const notifications = getNotifications();
+            const hasSampleNotifications = notifications.some(n => n.id < 1000);
+            
+            if (!hasSampleNotifications) {
+                // 添加几条示例通知
+                addNotification(
+                    '系统维护通知', 
+                    '本周六晚 22:00-24:00 系统将进行维护，届时可能无法正常使用，请提前做好安排。',
+                    'info'
+                );
+                
+                addNotification(
+                    '活动预告', 
+                    '图书馆将于下周一举办读书分享会，欢迎大家踊跃参加！',
+                    'info'
+                );
+            }
+        }
+
     </script>
+    
+    <!-- 底部导航 -->
+    <footer class="bg-white fixed bottom-0 w-full border-t border-gray-200">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-3 gap-1">
+                <a href="books.html" class="flex flex-col items-center py-2 text-primary">
+                    <i class="fas fa-home text-xl mb-1"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="borrowed.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
+                    <i class="fas fa-bookmark text-xl mb-1"></i>
+                    <span class="text-xs">借阅</span>
+                </a>
+                <a href="profile.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
+                    <i class="fas fa-user text-xl mb-1"></i>
+                    <span class="text-xs">我的</span>
+                </a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

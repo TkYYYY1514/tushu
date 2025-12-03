@@ -41,6 +41,19 @@
             .btn-hover {
                 @apply hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200;
             }
+            /* 消息卡片样式 */
+            .message-card {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                max-width: 300px;
+                transform: translateX(120%);
+                transition: transform 0.3s ease-out;
+            }
+            .message-card.show {
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
@@ -69,14 +82,19 @@
                 <div>
                     <h2 class="text-xl font-bold" id="userName">用户名</h2>
                     <p class="text-gray-600" id="userAccount">学号/工号</p>
+                    <p class="text-gray-500 text-sm" id="userType">用户类型</p>
                 </div>
             </div>
         </div>
 
         <!-- 统计信息 -->
-        <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="grid grid-cols-4 gap-3 mb-6">
             <div class="bg-white rounded-lg p-3 card-shadow text-center">
-                <div class="text-2xl font-bold text-primary" id="borrowedCount">0</div>
+                <div class="text-2xl font-bold text-primary" id="borrowLimit">0</div>
+                <div class="text-xs text-gray-500">借阅上限</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 card-shadow text-center">
+                <div class="text-2xl font-bold text-blue-500" id="borrowedCount">0</div>
                 <div class="text-xs text-gray-500">借阅中</div>
             </div>
             <div class="bg-white rounded-lg p-3 card-shadow text-center">
@@ -86,6 +104,22 @@
             <div class="bg-white rounded-lg p-3 card-shadow text-center">
                 <div class="text-2xl font-bold text-green-500" id="historyCount">0</div>
                 <div class="text-xs text-gray-500">历史</div>
+            </div>
+        </div>
+
+        <!-- 罚款信息 -->
+        <div class="bg-white rounded-lg p-4 card-shadow mb-6">
+            <h3 class="font-bold text-lg mb-3 flex items-center">
+                <i class="fas fa-money-bill-wave text-red-500 mr-2"></i>罚款信息
+            </h3>
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-600">当前欠款</p>
+                    <p class="text-2xl font-bold text-red-500">¥<span id="fineAmount">0.0</span></p>
+                </div>
+                <button id="payFineBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
+                    立即支付
+                </button>
             </div>
         </div>
 
@@ -115,6 +149,9 @@
 
     <!-- 弹窗组件容器 -->
     <div id="modalContainer"></div>
+    
+    <!-- 消息卡片容器 -->
+    <div id="messageCardContainer"></div>
 
     <!-- 账户设置模态框 -->
     <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-lg">
@@ -159,6 +196,34 @@
         </div>
     </div>
 
+    <!-- 支付模态框 -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-lg">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl transform transition-all duration-300 scale-95 opacity-0 modal-show">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-800 to-black rounded-t-2xl">
+                <h3 class="font-bold text-xl text-white">支付罚款</h3>
+                <button id="closePaymentModal" class="text-white hover:text-gray-300 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <p class="text-gray-600 mb-2">支付金额</p>
+                    <p class="text-3xl font-bold text-red-500">¥<span id="paymentAmount">0.0</span></p>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex space-x-3">
+                        <button class="flex-1 py-3 bg-gray-100 rounded-lg text-gray-700 font-medium">微信</button>
+                        <button class="flex-1 py-3 bg-gray-100 rounded-lg text-gray-700 font-medium">支付宝</button>
+                        <button class="flex-1 py-3 bg-gray-100 rounded-lg text-gray-700 font-medium">银行卡</button>
+                    </div>
+                    <button id="confirmPaymentBtn" class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium">
+                        确认支付
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 底部导航 -->
     <footer class="bg-white fixed bottom-0 w-full border-t border-gray-200">
         <div class="container mx-auto">
@@ -183,10 +248,13 @@
         // DOM元素
         const userName = document.getElementById('userName');
         const userAccount = document.getElementById('userAccount');
+        const userType = document.getElementById('userType');
         const logoutBtn = document.getElementById('logoutBtn');
         const borrowedCount = document.getElementById('borrowedCount');
         const overdueCount = document.getElementById('overdueCount');
         const historyCount = document.getElementById('historyCount');
+        const borrowLimit = document.getElementById('borrowLimit');
+        const fineAmount = document.getElementById('fineAmount');
         const accountSettings = document.getElementById('accountSettings');
         const settingsModal = document.getElementById('settingsModal');
         const closeSettingsModal = document.getElementById('closeSettingsModal');
@@ -195,6 +263,11 @@
         const usernameInput = document.getElementById('username');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
+        const payFineBtn = document.getElementById('payFineBtn');
+        const paymentModal = document.getElementById('paymentModal');
+        const closePaymentModal = document.getElementById('closePaymentModal');
+        const paymentAmount = document.getElementById('paymentAmount');
+        const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
@@ -207,11 +280,12 @@
             // 显示用户信息
             const userInfo = StorageManager.getUserInfo();
             if (userInfo) {
-                userName.textContent = userInfo.username || '未知用户';
+                userName.textContent = userInfo.name || userInfo.username || '未知用户';
                 userAccount.textContent = userInfo.account || '未知账号';
+                userType.textContent = userInfo.userType === 'faculty' ? '教职工' : '学生';
                 
                 // 填充表单默认值
-                usernameInput.value = userInfo.username || '';
+                usernameInput.value = userInfo.name || userInfo.username || '';
                 emailInput.value = userInfo.email || '';
             }
 
@@ -235,6 +309,10 @@
 
         // 更新统计信息
         function updateStats() {
+            // 获取用户借阅限制
+            const userLimit = StorageManager.getUserLimit();
+            borrowLimit.textContent = userLimit;
+            
             // 借阅中数量和逾期数量
             const borrowedBooks = StorageManager.getBorrowedBooks();
             const borrowed = borrowedBooks.filter(record => !record.returned);
@@ -249,6 +327,20 @@
             
             // 历史数量（所有借阅记录）
             historyCount.textContent = borrowedBooks.length;
+            
+            // 计算罚款总额（动态计算）
+            let totalFine = 0;
+            borrowed.forEach(record => {
+                const today = new Date();
+                const dueDate = new Date(record.dueDate);
+                if (dueDate < today) {
+                    const overdueDays = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+                    totalFine += overdueDays * 0.5; // 每天0.5元罚款
+                }
+            });
+            
+            fineAmount.textContent = totalFine.toFixed(1);
+            paymentAmount.textContent = totalFine.toFixed(1);
         }
 
         // 绑定事件
@@ -256,17 +348,10 @@
             // 退出登录
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function() {
-                    if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
-                        GlobalModalManager.show('确定要退出登录吗？', function() {
-                            StorageManager.logout();
-                            window.location.href = 'login.html';
-                        });
-                    } else {
-                        if (confirm('确定要退出登录吗？')) {
-                            StorageManager.logout();
-                            window.location.href = 'login.html';
-                        }
-                    }
+                    showMessageCardWithConfirm('确定要退出登录吗？', 'warning', function() {
+                        StorageManager.logout();
+                        window.location.href = 'login.html';
+                    });
                 });
             }
             
@@ -301,6 +386,140 @@
                     saveSettings();
                 });
             }
+            
+            // 支付罚款按钮
+            if (payFineBtn) {
+                payFineBtn.addEventListener('click', function() {
+                    // 每次点击时重新计算罚款金额
+                    updateStats();
+                    showPaymentModal();
+                });
+            }
+            
+            // 关闭支付模态框
+            if (closePaymentModal) {
+                closePaymentModal.addEventListener('click', function() {
+                    closePaymentModalHandler();
+                });
+            }
+            
+            // 点击支付模态框外部关闭
+            if (paymentModal) {
+                paymentModal.addEventListener('click', function(e) {
+                    if (e.target === paymentModal) {
+                        closePaymentModalHandler();
+                    }
+                });
+            }
+            
+            // 确认支付按钮
+            if (confirmPaymentBtn) {
+                confirmPaymentBtn.addEventListener('click', function() {
+                    confirmPayment();
+                });
+            }
+            
+            // 刷新按钮（如果需要的话）
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    updateStats();
+                });
+            }
+        }
+        
+        // 显示带确认按钮的消息卡片
+        function showMessageCardWithConfirm(message, type, onConfirm) {
+            // 创建消息卡片元素
+            const messageCard = document.createElement('div');
+            messageCard.className = 'message-card';
+            
+            // 根据消息类型设置样式
+            let icon = '';
+            let bgColor = '';
+            let textColor = '';
+            
+            switch(type) {
+                case 'success':
+                    icon = '<i class="fas fa-check-circle"></i>';
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    break;
+                case 'error':
+                    icon = '<i class="fas fa-exclamation-circle"></i>';
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    break;
+                case 'warning':
+                    icon = '<i class="fas fa-exclamation-triangle"></i>';
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-white';
+                    break;
+                case 'info':
+                default:
+                    icon = '<i class="fas fa-info-circle"></i>';
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    break;
+            }
+            
+            messageCard.innerHTML = `
+                <div class="rounded-lg shadow-lg ${bgColor} ${textColor} p-4 flex flex-col">
+                    <div class="flex items-start mb-3">
+                        <div class="mr-3 text-xl">${icon}</div>
+                        <div class="flex-1">${message}</div>
+                        <button class="ml-3 text-xl opacity-75 hover:opacity-100 focus:outline-none message-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="flex space-x-2 justify-end">
+                        <button class="cancel-btn px-4 py-2 bg-white/20 rounded hover:bg-white/30 transition-colors">
+                            取消
+                        </button>
+                        <button class="confirm-btn px-4 py-2 bg-white text-gray-800 rounded hover:bg-gray-100 transition-colors font-medium">
+                            确认
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到消息容器
+            document.getElementById('messageCardContainer').appendChild(messageCard);
+            
+            // 显示动画
+            setTimeout(() => {
+                messageCard.classList.add('show');
+            }, 10);
+            
+            // 绑定关闭事件
+            const closeBtn = messageCard.querySelector('.message-close');
+            closeBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                }, 300);
+            });
+            
+            // 绑定取消按钮事件
+            const cancelBtn = messageCard.querySelector('.cancel-btn');
+            cancelBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                }, 300);
+            });
+            
+            // 绑定确认按钮事件
+            const confirmBtn = messageCard.querySelector('.confirm-btn');
+            confirmBtn.addEventListener('click', () => {
+                messageCard.classList.remove('show');
+                setTimeout(() => {
+                    messageCard.remove();
+                    // 执行确认操作
+                    if (onConfirm && typeof onConfirm === 'function') {
+                        onConfirm();
+                    }
+                }, 300);
+            });
         }
         
         // 显示设置
@@ -337,7 +556,7 @@
         function saveSettings() {
             const userInfo = StorageManager.getUserInfo();
             if (userInfo) {
-                userInfo.username = usernameInput.value;
+                userInfo.name = usernameInput.value;
                 userInfo.email = emailInput.value;
                 
                 // 如果输入了新密码，则更新密码
@@ -348,7 +567,8 @@
                 StorageManager.saveUserInfo(userInfo);
                 
                 // 更新页面上的用户名显示
-                userName.textContent = userInfo.username || '未知用户';
+                userName.textContent = userInfo.name || userInfo.username || '未知用户';
+                userAccount.textContent = userInfo.account || '未知账号'; // 同时更新账号显示
                 
                 // 显示成功消息
                 if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
@@ -357,9 +577,79 @@
                     alert('设置已保存');
                 }
                 
+                // 更新注册用户信息（如果存在）
+                try {
+                    const registeredUserStr = localStorage.getItem('registered_user_' + userInfo.account);
+                    if (registeredUserStr) {
+                        const registeredUser = JSON.parse(registeredUserStr);
+                        registeredUser.name = usernameInput.value;
+                        registeredUser.email = emailInput.value;
+                        if (passwordInput.value.trim() !== '') {
+                            registeredUser.password = passwordInput.value;
+                        }
+                        localStorage.setItem('registered_user_' + userInfo.account, JSON.stringify(registeredUser));
+                    }
+                } catch (err) {
+                    console.error('更新注册用户信息失败:', err);
+                }
+                
                 // 关闭模态框
                 closeSettingsModalHandler();
             }
+        }
+        
+        // 显示支付模态框
+        function showPaymentModal() {
+            const amount = parseFloat(fineAmount.textContent);
+            if (amount <= 0) {
+                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                    GlobalModalManager.message('当前没有欠款');
+                } else {
+                    alert('当前没有欠款');
+                }
+                return;
+            }
+            
+            paymentAmount.textContent = amount.toFixed(1);
+            
+            // 显示弹窗并添加动画效果
+            paymentModal.classList.remove('hidden');
+            setTimeout(() => {
+                const modalDialog = paymentModal.querySelector('div');
+                modalDialog.classList.remove('scale-95', 'opacity-0');
+                modalDialog.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        
+        // 关闭支付模态框处理函数
+        function closePaymentModalHandler() {
+            const modalDialog = paymentModal.querySelector('div');
+            modalDialog.classList.remove('scale-100', 'opacity-100');
+            modalDialog.classList.add('scale-95', 'opacity-0');
+            
+            // 延迟隐藏整个模态框以允许动画完成
+            setTimeout(() => {
+                paymentModal.classList.add('hidden');
+            }, 300);
+        }
+        
+        // 确认支付
+        function confirmPayment() {
+            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                GlobalModalManager.message('支付成功！感谢您的付款。');
+            } else {
+                alert('支付成功！感谢您的付款。');
+            }
+            
+            // 更新罚款金额为0
+            fineAmount.textContent = '0.0';
+            
+            // 关闭模态框
+            closePaymentModalHandler();
+            
+            // 可以在这里添加更新借阅记录的逻辑，标记罚款已支付
+            // 例如：更新localStorage中的借阅记录状态
+            // 例如：更新localStorage中的借阅记录状态
         }
     </script>
 </body>
