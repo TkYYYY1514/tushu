@@ -1,679 +1,107 @@
-/**
- * 本地存储管理模块
- * 用于处理用户信息、借阅数据等本地存储操作
- */
-
+// 本地存储管理器
 const StorageManager = {
-    // 存储键名常量
-    KEYS: {
-        USER_INFO: 'library_user_info',
-        BORROW_RECORDS: 'library_borrow_records',
-        BOOK_CACHE: 'library_book_cache',
-        USER_TYPE: 'library_user_type',
-        LOGIN_STATUS: 'library_login_status',
-        BOOKSHELF_BOOKS: 'library_bookshelf_books',
-        HISTORY_BOOKS: 'library_history_books',
-        READING_GOALS: 'library_reading_goals',
-        USER_PREFERENCES: 'library_user_preferences'
-    },
-
-    /**
-     * 检查本地存储是否可用
-     * @returns {boolean} 本地存储是否可用
-     */
-    isStorageAvailable() {
+    // 保存用户信息
+    saveUserInfo: function(userInfo) {
         try {
-            const testKey = '__test__';
-            localStorage.setItem(testKey, testKey);
-            localStorage.removeItem(testKey);
+            localStorage.setItem('library_user_info', JSON.stringify(userInfo));
+            localStorage.setItem('library_is_logged_in', 'true');
             return true;
-        } catch (e) {
-            console.error('本地存储不可用:', e);
+        } catch (error) {
+            console.error('保存用户信息失败:', error);
             return false;
         }
     },
 
-    /**
-     * 保存用户信息
-     * @param {Object} userInfo - 用户信息对象
-     * @returns {boolean} 保存是否成功
-     */
-    saveUserInfo(userInfo) {
-        if (!this.isStorageAvailable()) return false;
-        
+    // 获取用户信息
+    getUserInfo: function() {
         try {
-            localStorage.setItem(this.KEYS.USER_INFO, JSON.stringify(userInfo));
-            localStorage.setItem(this.KEYS.LOGIN_STATUS, 'true');
-            return true;
-        } catch (e) {
-            console.error('保存用户信息失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 获取用户信息
-     * @returns {Object|null} 用户信息对象或null
-     */
-    getUserInfo() {
-        if (!this.isStorageAvailable()) return null;
-        
-        try {
-            const userInfoStr = localStorage.getItem(this.KEYS.USER_INFO);
-            return userInfoStr ? JSON.parse(userInfoStr) : null;
-        } catch (e) {
-            console.error('获取用户信息失败:', e);
+            const userInfo = localStorage.getItem('library_user_info');
+            return userInfo ? JSON.parse(userInfo) : null;
+        } catch (error) {
+            console.error('获取用户信息失败:', error);
             return null;
         }
     },
 
-    /**
-     * 设置用户类型
-     * @param {string} userType - 用户类型 ('student' 或 'teacher')
-     * @returns {boolean} 设置是否成功
-     */
-    setUserType(userType) {
-        if (!this.isStorageAvailable()) return false;
-        
+    // 检查是否已登录
+    isLoggedIn: function() {
+        return localStorage.getItem('library_is_logged_in') === 'true';
+    },
+
+    // 退出登录
+    logout: function() {
         try {
-            localStorage.setItem(this.KEYS.USER_TYPE, userType);
+            localStorage.removeItem('library_is_logged_in');
+            localStorage.removeItem('library_user_info');
             return true;
-        } catch (e) {
-            console.error('设置用户类型失败:', e);
+        } catch (error) {
+            console.error('退出登录失败:', error);
             return false;
         }
     },
 
-    /**
-     * 获取用户类型
-     * @returns {string|null} 用户类型或null
-     */
-    getUserType() {
-        if (!this.isStorageAvailable()) return null;
-        
+    // 保存借阅记录
+    saveBorrowedBooks: function(books) {
         try {
-            return localStorage.getItem(this.KEYS.USER_TYPE);
-        } catch (e) {
-            console.error('获取用户类型失败:', e);
-            return null;
-        }
-    },
-
-    /**
-     * 检查用户是否已登录（已修改为始终返回true，绕过登录检查）
-     * @returns {boolean} 是否已登录
-     */
-    isLoggedIn() {
-        // 为了简化用户体验，始终返回已登录状态
-        return true;
-        
-        /* 原始登录检查逻辑已注释，保留作为参考
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            return localStorage.getItem(this.KEYS.LOGIN_STATUS) === 'true';
-        } catch (e) {
-            console.error('检查登录状态失败:', e);
-            return false;
-        }
-        */
-    },
-
-    /**
-     * 用户登出
-     * @returns {boolean} 登出是否成功
-     */
-    logout() {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            localStorage.removeItem(this.KEYS.USER_INFO);
-            localStorage.removeItem(this.KEYS.LOGIN_STATUS);
+            localStorage.setItem('library_borrowed_books', JSON.stringify(books));
             return true;
-        } catch (e) {
-            console.error('用户登出失败:', e);
+        } catch (error) {
+            console.error('保存借阅记录失败:', error);
             return false;
         }
     },
 
-    /**
-     * 获取所有借阅记录
-     * @returns {Array} 借阅记录数组
-     */
-    getBorrowRecords() {
-        if (!this.isStorageAvailable()) return [];
-        
+    // 获取借阅记录
+    getBorrowedBooks: function() {
         try {
-            const recordsStr = localStorage.getItem(this.KEYS.BORROW_RECORDS);
-            return recordsStr ? JSON.parse(recordsStr) : [];
-        } catch (e) {
-            console.error('获取借阅记录失败:', e);
+            const books = localStorage.getItem('library_borrowed_books');
+            return books ? JSON.parse(books) : [];
+        } catch (error) {
+            console.error('获取借阅记录失败:', error);
             return [];
         }
     },
 
-    /**
-     * 添加借阅记录
-     * @param {Object} bookInfo - 图书信息
-     * @returns {boolean} 添加是否成功
-     */
-    addBorrowRecord(bookInfo) {
-        if (!this.isStorageAvailable()) return false;
-        
+    // 保存收藏记录
+    saveFavoriteBooks: function(books) {
         try {
-            const records = this.getBorrowRecords();
-            const userInfo = this.getUserInfo();
-            
-            if (!userInfo) {
-                console.error('用户未登录，无法添加借阅记录');
-                return false;
-            }
-            
-            // 创建借阅记录
-            const borrowRecord = {
-                id: Date.now(), // 使用时间戳作为唯一ID
-                bookId: bookInfo.id,
-                bookTitle: bookInfo.title,
-                bookAuthor: bookInfo.author,
-                bookCover: bookInfo.cover,
-                borrowerId: userInfo.account,
-                borrowerName: userInfo.name,
-                borrowDate: new Date().toISOString(),
-                dueDate: this.calculateDueDate(),
-                status: 'borrowed', // borrowed, returned, overdue
-                returnDate: null
-            };
-            
-            records.push(borrowRecord);
-            localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(records));
+            localStorage.setItem('library_favorite_books', JSON.stringify(books));
             return true;
-        } catch (e) {
-            console.error('添加借阅记录失败:', e);
+        } catch (error) {
+            console.error('保存收藏记录失败:', error);
             return false;
         }
     },
 
-    /**
-     * 归还图书
-     * @param {number} recordId - 借阅记录ID
-     * @returns {boolean} 归还是否成功
-     */
-    returnBook(recordId) {
-        if (!this.isStorageAvailable()) return false;
-        
+    // 获取收藏记录
+    getFavoriteBooks: function() {
         try {
-            const records = this.getBorrowRecords();
-            const recordIndex = records.findIndex(record => record.id === recordId);
-            
-            if (recordIndex === -1) {
-                console.error('未找到借阅记录');
-                return false;
-            }
-            
-            // 更新借阅记录
-            records[recordIndex].status = 'returned';
-            records[recordIndex].returnDate = new Date().toISOString();
-            
-            localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(records));
-            return true;
-        } catch (e) {
-            console.error('归还图书失败:', e);
-            return false;
+            const books = localStorage.getItem('library_favorite_books');
+            return books ? JSON.parse(books) : [];
+        } catch (error) {
+            console.error('获取收藏记录失败:', error);
+            return [];
         }
     },
 
-    /**
-     * 移除借阅记录（兼容函数，用于还书功能）
-     * @param {number} bookId - 图书ID
-     * @returns {boolean} 移除是否成功
-     */
-    removeBorrowRecord(bookId) {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            const records = this.getBorrowRecords();
-            const userInfo = this.getUserInfo();
-            
-            if (!userInfo) {
-                console.error('用户未登录，无法移除借阅记录');
-                return false;
-            }
-            
-            // 查找当前用户的借阅记录
-            const recordIndex = records.findIndex(record => 
-                record.bookId === bookId && 
-                record.borrowerId === userInfo.account && 
-                record.status === 'borrowed'
-            );
-            
-            if (recordIndex === -1) {
-                console.error('未找到当前用户的借阅记录');
-                return false;
-            }
-            
-            // 更新借阅记录状态为已归还
-            records[recordIndex].status = 'returned';
-            records[recordIndex].returnDate = new Date().toISOString();
-            
-            localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(records));
-            return true;
-        } catch (e) {
-            console.error('移除借阅记录失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 获取用户当前借阅的图书
-     * @returns {Array} 当前借阅的图书数组
-     */
-    getCurrentBorrowedBooks() {
-        const records = this.getBorrowRecords();
-        const userInfo = this.getUserInfo();
-        
-        if (!userInfo) return [];
-        
-        return records.filter(record => 
-            record.borrowerId === userInfo.account && 
-            record.status === 'borrowed'
-        );
-    },
-    
-    /**
-     * 获取用户当前借阅的图书（兼容函数）
-     * @returns {Array} 当前借阅的图书数组
-     */
-    getBorrowedBooks() {
-        // 调用现有的getCurrentBorrowedBooks函数以保持一致性
-        return this.getCurrentBorrowedBooks();
-    },
-
-    /**
-     * 缓存图书数据
-     * @param {Array} books - 图书数据数组
-     * @returns {boolean} 缓存是否成功
-     */
-    cacheBooks(books) {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            const cacheData = {
-                books: books,
-                timestamp: new Date().toISOString()
-            };
-            
-            localStorage.setItem(this.KEYS.BOOK_CACHE, JSON.stringify(cacheData));
-            return true;
-        } catch (e) {
-            console.error('缓存图书数据失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 获取缓存的图书数据
-     * @param {number} maxAgeInMinutes - 最大缓存时间（分钟），默认30分钟
-     * @returns {Array|null} 图书数据数组或null
-     */
-    getCachedBooks(maxAgeInMinutes = 30) {
-        if (!this.isStorageAvailable()) return null;
-        
-        try {
-            const cacheStr = localStorage.getItem(this.KEYS.BOOK_CACHE);
-            if (!cacheStr) return null;
-            
-            const cacheData = JSON.parse(cacheStr);
-            const cacheTime = new Date(cacheData.timestamp);
-            const now = new Date();
-            const ageInMinutes = (now - cacheTime) / (1000 * 60);
-            
-            // 检查缓存是否过期
-            if (ageInMinutes > maxAgeInMinutes) {
-                return null;
-            }
-            
-            return cacheData.books;
-        } catch (e) {
-            console.error('获取缓存图书数据失败:', e);
-            return null;
-        }
-    },
-
-    /**
-     * 清除图书缓存
-     * @returns {boolean} 清除是否成功
-     */
-    clearBookCache() {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            localStorage.removeItem(this.KEYS.BOOK_CACHE);
-            return true;
-        } catch (e) {
-            console.error('清除图书缓存失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 计算归还日期（默认30天后）
-     * @returns {string} ISO格式的归还日期
-     */
-    calculateDueDate() {
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 30); // 默认借阅30天
-        return dueDate.toISOString();
-    },
-
-    /**
-     * 获取剩余借阅天数
-     * @param {string} dueDateStr - ISO格式的归还日期字符串
-     * @returns {number} 剩余天数（负数表示已逾期）
-     */
-    getRemainingDays(dueDateStr) {
-        const dueDate = new Date(dueDateStr);
-        const now = new Date();
-        const diffTime = dueDate - now;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
-    },
-
-    /**
-     * 检查图书是否已被当前用户借阅
-     * @param {number} bookId - 图书ID
-     * @returns {boolean} 是否已借阅
-     */
-    isBookBorrowedByUser(bookId) {
-        const records = this.getCurrentBorrowedBooks();
-        return records.some(record => record.bookId === bookId);
-    },
-
-    /**
-     * 获取用户借阅历史
-     * @returns {Array} 借阅历史数组
-     */
-    getUserBorrowHistory() {
-        const records = this.getBorrowRecords();
-        const userInfo = this.getUserInfo();
-        
-        if (!userInfo) return [];
-        
-        return records.filter(record => record.borrowerId === userInfo.account);
-    },
-
-    /**
-     * 初始化模拟数据（仅在开发环境使用）
-     */
-    initMockData() {
-        // 强制创建测试账号，确保用户能够登录
-        // 创建默认测试账号
-        const testUser = {
+    // 初始化默认用户（用于测试）
+    initDefaultUser: function() {
+        const defaultUser = {
             account: 'test123',
             password: 'test123',
-            userType: 'student',
-            name: '测试用户',
-            email: 'test@example.com',
-            phone: '13800138000',
-            registerDate: new Date().toISOString()
+            username: '测试用户',
+            avatar: '',
+            email: 'test@example.com'
         };
         
-        try {
-            // 强制保存测试账号，覆盖可能存在的旧数据
-            this.saveUserInfo(testUser);
-            this.setUserType('student');
-            console.log('测试账号已创建/更新: 账号(test123), 密码(test123)');
-            
-            // 清除可能存在的旧登录状态
-            localStorage.setItem(this.KEYS.LOGIN_STATUS, 'false');
-        } catch (e) {
-            console.error('创建测试账号失败:', e);
-        }
-        
-        // 检查是否已有借阅记录，如果没有则创建模拟借阅记录
-        if (this.getBorrowRecords().length === 0) {
-            // 模拟一些借阅记录
-            const mockRecords = [
-                {
-                    id: 1001,
-                    bookId: 1,
-                    bookTitle: '活着',
-                    bookAuthor: '余华',
-                    bookCover: 'https://picsum.photos/id/24/300/450',
-                    borrowerId: 'test123',
-                    borrowerName: '测试用户',
-                    borrowDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                    dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'borrowed',
-                    returnDate: null
-                },
-                {
-                    id: 1002,
-                    bookId: 2,
-                    bookTitle: '三体',
-                    bookAuthor: '刘慈欣',
-                    bookCover: 'https://picsum.photos/id/20/300/450',
-                    borrowerId: 'test123',
-                    borrowerName: '测试用户',
-                    borrowDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    dueDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'borrowed',
-                    returnDate: null
-                },
-                {
-                    id: 1003,
-                    bookId: 3,
-                    bookTitle: '解忧杂货店',
-                    bookAuthor: '东野圭吾',
-                    bookCover: 'https://picsum.photos/id/22/300/450',
-                    borrowerId: 'test123',
-                    borrowerName: '测试用户',
-                    borrowDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-                    dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                    status: 'returned',
-                    returnDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-                }
-            ];
-            
-            try {
-                localStorage.setItem(this.KEYS.BORROW_RECORDS, JSON.stringify(mockRecords));
-                console.log('模拟借阅数据初始化完成');
-            } catch (e) {
-                console.error('初始化模拟数据失败:', e);
-            }
-        }
-    },
-
-    /**
-     * 获取书架图书数据
-     * @returns {Array} 书架图书数组
-     */
-    getBookshelfBooks() {
-        if (!this.isStorageAvailable()) return [];
-        
-        try {
-            const booksStr = localStorage.getItem(this.KEYS.BOOKSHELF_BOOKS);
-            return booksStr ? JSON.parse(booksStr) : [];
-        } catch (e) {
-            console.error('获取书架图书失败:', e);
-            return [];
-        }
-    },
-
-    /**
-     * 保存书架图书数据
-     * @param {Array} books - 书架图书数组
-     * @returns {boolean} 保存是否成功
-     */
-    saveBookshelfBooks(books) {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            localStorage.setItem(this.KEYS.BOOKSHELF_BOOKS, JSON.stringify(books));
-            return true;
-        } catch (e) {
-            console.error('保存书架图书失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 获取历史借阅记录
-     * @returns {Array} 历史借阅记录数组
-     */
-    getHistoryBooks() {
-        if (!this.isStorageAvailable()) return [];
-        
-        try {
-            const data = localStorage.getItem(this.KEYS.HISTORY_BOOKS);
-            return data ? JSON.parse(data) : [];
-        } catch (e) {
-            console.error('获取历史借阅记录失败:', e);
-            return [];
-        }
-    },
-
-    /**
-     * 保存历史借阅记录
-     * @param {Array} books - 历史借阅记录数组
-     * @returns {boolean} 保存是否成功
-     */
-    saveHistoryBooks(books) {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            localStorage.setItem(this.KEYS.HISTORY_BOOKS, JSON.stringify(books));
-            return true;
-        } catch (e) {
-            console.error('保存历史借阅记录失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 获取阅读目标
-     * @returns {Object|null} 阅读目标对象或null
-     */
-    getReadingGoals() {
-        if (!this.isStorageAvailable()) return null;
-        
-        try {
-            const data = localStorage.getItem(this.KEYS.READING_GOALS);
-            return data ? JSON.parse(data) : null;
-        } catch (e) {
-            console.error('获取阅读目标失败:', e);
-            return null;
-        }
-    },
-
-    /**
-     * 保存阅读目标
-     * @param {Object} goals - 阅读目标对象
-     * @returns {boolean} 保存是否成功
-     */
-    saveReadingGoals(goals) {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            localStorage.setItem(this.KEYS.READING_GOALS, JSON.stringify(goals));
-            return true;
-        } catch (e) {
-            console.error('保存阅读目标失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 获取用户偏好设置
-     * @returns {Object|null} 用户偏好设置对象或null
-     */
-    getUserPreferences() {
-        if (!this.isStorageAvailable()) return null;
-        
-        try {
-            const data = localStorage.getItem(this.KEYS.USER_PREFERENCES);
-            return data ? JSON.parse(data) : null;
-        } catch (e) {
-            console.error('获取用户偏好设置失败:', e);
-            return null;
-        }
-    },
-
-    /**
-     * 保存用户偏好设置
-     * @param {Object} prefs - 用户偏好设置对象
-     * @returns {boolean} 保存是否成功
-     */
-    saveUserPreferences(prefs) {
-        if (!this.isStorageAvailable()) return false;
-        
-        try {
-            localStorage.setItem(this.KEYS.USER_PREFERENCES, JSON.stringify(prefs));
-            return true;
-        } catch (e) {
-            console.error('保存用户偏好设置失败:', e);
-            return false;
-        }
-    },
-
-    /**
-     * 初始化书架模拟数据
-     */
-    initBookshelfMockData() {
-        // 检查是否已有书架数据，如果没有则创建模拟数据
-        if (this.getBookshelfBooks().length === 0) {
-            const mockBookshelf = [
-                {
-                    id: 2001,
-                    title: '活着',
-                    author: '余华',
-                    cover: 'https://picsum.photos/id/24/300/450',
-                    category: '文学艺术',
-                    status: 'reading',
-                    addedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    progress: 0,
-                    rating: 0,
-                    notes: ''
-                },
-                {
-                    id: 2002,
-                    title: '三体',
-                    author: '刘慈欣',
-                    cover: 'https://picsum.photos/id/20/300/450',
-                    category: '科技',
-                    status: 'finished',
-                    addedDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    progress: 100,
-                    rating: 5,
-                    notes: '非常震撼的科幻作品'
-                },
-                {
-                    id: 2003,
-                    title: '解忧杂货店',
-                    author: '东野圭吾',
-                    cover: 'https://picsum.photos/id/22/300/450',
-                    category: '文学艺术',
-                    status: 'wishlist',
-                    addedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    progress: 0,
-                    rating: 0,
-                    notes: '期待阅读的温暖故事'
-                }
-            ];
-            
-            try {
-                this.saveBookshelfBooks(mockBookshelf);
-                console.log('书架模拟数据初始化完成');
-            } catch (e) {
-                console.error('初始化书架模拟数据失败:', e);
-            }
+        // 如果还没有用户信息，创建默认用户
+        if (!this.getUserInfo()) {
+            this.saveUserInfo(defaultUser);
         }
     }
 };
 
-// 导出存储管理器
-if (typeof window !== 'undefined') {
-    window.StorageManager = StorageManager;
-    // 初始化模拟数据
-    StorageManager.initMockData();
-    StorageManager.initBookshelfMockData();
-}
+// 页面加载时初始化默认用户
+document.addEventListener('DOMContentLoaded', function() {
+    StorageManager.initDefaultUser();
+});

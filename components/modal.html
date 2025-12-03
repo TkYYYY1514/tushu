@@ -1,0 +1,217 @@
+<!-- 自定义弹窗组件 -->
+<div id="customGlobalModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-lg">
+    <div class="bg-gray-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all duration-300 scale-95 opacity-0 modal-show">
+        <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-gradient-to-r from-primary to-secondary rounded-t-2xl">
+            <h3 class="font-bold text-xl text-white">提示</h3>
+            <button id="closeGlobalModal" class="text-white hover:text-gray-200 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <p id="globalModalMessage" class="text-gray-200 text-base mb-8 text-center leading-relaxed"></p>
+            <div class="flex space-x-4">
+                <button id="cancelGlobalBtn" class="flex-1 py-3 px-4 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-600 transition-colors shadow-sm">取消</button>
+                <button id="confirmGlobalBtn" class="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-medium hover:opacity-90 transition-opacity shadow-md">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style type="text/tailwindcss">
+    @layer utilities {
+        .modal-show {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+    }
+</style>
+
+<script>
+    // 全局弹窗管理器
+    const GlobalModalManager = (function() {
+        // DOM元素
+        let customModal, modalMessage, confirmBtn, cancelBtn, closeModal;
+        
+        // 等待DOM加载完成后再获取元素
+        document.addEventListener('DOMContentLoaded', function() {
+            customModal = document.getElementById('customGlobalModal');
+            modalMessage = document.getElementById('globalModalMessage');
+            confirmBtn = document.getElementById('confirmGlobalBtn');
+            cancelBtn = document.getElementById('cancelGlobalBtn');
+            closeModal = document.getElementById('closeGlobalModal');
+                
+            // 如果元素不存在，尝试重新获取
+            if (!customModal) {
+                setTimeout(function() {
+                    customModal = document.getElementById('customGlobalModal');
+                    modalMessage = document.getElementById('globalModalMessage');
+                    confirmBtn = document.getElementById('confirmGlobalBtn');
+                    cancelBtn = document.getElementById('cancelGlobalBtn');
+                    closeModal = document.getElementById('closeGlobalModal');
+                }, 100);
+            }
+        });
+        
+        let confirmCallback = null;
+        let cancelCallback = null;
+        
+        // 显示自定义弹窗
+        function showModal(message, onConfirm, onCancel) {
+            // 确保DOM元素已加载
+            if (!customModal) {
+                customModal = document.getElementById('customGlobalModal');
+                modalMessage = document.getElementById('globalModalMessage');
+                confirmBtn = document.getElementById('confirmGlobalBtn');
+                cancelBtn = document.getElementById('cancelGlobalBtn');
+                closeModal = document.getElementById('closeGlobalModal');
+            }
+            
+            if (!customModal) {
+                console.error('弹窗组件未找到');
+                return;
+            }
+            
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+            
+            // 保存回调函数
+            confirmCallback = onConfirm;
+            cancelCallback = onCancel;
+            
+            // 触发动画
+            setTimeout(() => {
+                const modalContent = customModal.querySelector('.bg-gray-800');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+            
+            // 绑定事件
+            bindEvents();
+        }
+        
+        // 隐藏自定义弹窗
+        function hideModal() {
+            // 确保DOM元素已加载
+            if (!customModal) {
+                customModal = document.getElementById('customGlobalModal');
+            }
+            
+            if (!customModal) {
+                console.error('弹窗组件未找到');
+                return;
+            }
+            
+            const modalContent = customModal.querySelector('.bg-gray-800');
+            if (modalContent) {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+            }
+            
+            setTimeout(() => {
+                if (customModal) {
+                    customModal.classList.add('hidden');
+                }
+            }, 300);
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 确保DOM元素已加载
+            if (!confirmBtn || !cancelBtn || !closeModal) {
+                confirmBtn = document.getElementById('confirmGlobalBtn');
+                cancelBtn = document.getElementById('cancelGlobalBtn');
+                closeModal = document.getElementById('closeGlobalModal');
+            }
+            
+            if (!confirmBtn || !cancelBtn || !closeModal) {
+                console.error('弹窗按钮元素未找到');
+                return;
+            }
+            
+            // 移除之前可能存在的事件监听器
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            closeModal.removeEventListener('click', handleClose);
+            
+            // 添加新的事件监听器
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+            closeModal.addEventListener('click', handleClose);
+        }
+        
+        // 确认按钮处理函数
+        function handleConfirm() {
+            if (confirmCallback && typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            hideModal();
+        }
+        
+        // 取消按钮处理函数
+        function handleCancel() {
+            if (cancelCallback && typeof cancelCallback === 'function') {
+                cancelCallback();
+            }
+            hideModal();
+        }
+        
+        // 关闭按钮处理函数
+        function handleClose() {
+            handleCancel();
+        }
+        
+        // 只显示确认按钮的弹窗（用于消息提示）
+        function showMessage(message, onClose) {
+            // 确保DOM元素已加载
+            if (!customModal) {
+                customModal = document.getElementById('customGlobalModal');
+                modalMessage = document.getElementById('globalModalMessage');
+                confirmBtn = document.getElementById('confirmGlobalBtn');
+                cancelBtn = document.getElementById('cancelGlobalBtn');
+                closeModal = document.getElementById('closeGlobalModal');
+            }
+            
+            if (!customModal) {
+                console.error('弹窗组件未找到');
+                return;
+            }
+            
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+            
+            // 隐藏取消按钮
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            if (confirmBtn) confirmBtn.classList.add('w-full');
+            
+            // 保存回调函数
+            confirmCallback = onClose || null;
+            
+            // 触发动画
+            setTimeout(() => {
+                const modalContent = customModal.querySelector('.bg-gray-800');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+            
+            // 绑定事件
+            bindEvents();
+        }
+        
+        // 恢复按钮状态
+        function restoreButtons() {
+            if (cancelBtn) cancelBtn.classList.remove('hidden');
+            if (confirmBtn) confirmBtn.classList.remove('w-full');
+        }
+        
+        // 公共接口
+        return {
+            show: showModal,
+            hide: hideModal,
+            message: showMessage,
+            restoreButtons: restoreButtons
+        };
+    })();
+</script>

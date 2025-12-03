@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>借阅记录 - 雀语图书馆</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        secondary: '#10B981',
+                        accent: '#059669',
+                        light: '#ECFDF5',
+                        dark: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .card-shadow {
+                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
+            }
+            .btn-hover {
+                @apply hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200;
+            }
+            .modal-show {
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pb-16">
+    <!-- 引入存储管理模块 -->
+    <script src="utils/storage.js"></script>
+    <!-- 弹窗组件容器 -->
+    <div id="modalContainer"></div>
+    
+    <!-- 顶部导航栏 -->
+    <header class="bg-white sticky top-0 z-10 card-shadow">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-bookmark text-primary text-xl"></i>
+                <h1 class="text-lg font-bold text-dark">借阅记录</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="refreshBtn" class="text-gray-600 hover:text-primary">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 container mx-auto px-4 py-4">
+        <!-- 统计信息 -->
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-white rounded-lg p-3 card-shadow text-center">
+                <div class="text-2xl font-bold text-primary" id="totalCount">0</div>
+                <div class="text-xs text-gray-500">总计</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 card-shadow text-center">
+                <div class="text-2xl font-bold text-yellow-500" id="borrowedCount">0</div>
+                <div class="text-xs text-gray-500">借阅中</div>
+            </div>
+            <div class="bg-white rounded-lg p-3 card-shadow text-center">
+                <div class="text-2xl font-bold text-green-500" id="returnedCount">0</div>
+                <div class="text-xs text-gray-500">已归还</div>
+            </div>
+        </div>
+
+        <!-- 借阅记录列表 -->
+        <div id="borrowedList" class="space-y-3">
+            <!-- 记录将通过JavaScript动态生成 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div id="emptyState" class="hidden py-12 text-center">
+            <i class="fas fa-book-open text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">暂无借阅记录</p>
+        </div>
+    </main>
+
+    
+
+    <!-- 弹窗组件 -->
+    <div id="modalContainer"></div>
+
+    <!-- 底部导航 -->
+    <footer class="bg-white fixed bottom-0 w-full border-t border-gray-200">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-3 gap-1">
+                <a href="books.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
+                    <i class="fas fa-home text-xl mb-1"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="borrowed.html" class="flex flex-col items-center py-2 text-primary">
+                    <i class="fas fa-bookmark text-xl mb-1"></i>
+                    <span class="text-xs">借阅</span>
+                </a>
+                <a href="profile.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
+                    <i class="fas fa-user text-xl mb-1"></i>
+                    <span class="text-xs">我的</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM元素
+        const borrowedList = document.getElementById('borrowedList');
+        const emptyState = document.getElementById('emptyState');
+        const totalCount = document.getElementById('totalCount');
+        const borrowedCount = document.getElementById('borrowedCount');
+        const returnedCount = document.getElementById('returnedCount');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            if (!StorageManager.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 动态加载弹窗组件
+            fetch('components/modal.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                    // 渲染借阅记录
+                    renderBorrowedRecords();
+
+                    // 绑定事件
+                    bindEvents();
+                })
+                .catch(error => {
+                    console.error('加载弹窗组件失败:', error);
+                    // 即使弹窗组件加载失败，也要初始化页面
+                    renderBorrowedRecords();
+                    bindEvents();
+                });
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            // 刷新按钮
+            refreshBtn.addEventListener('click', function() {
+                renderBorrowedRecords();
+            });
+        }
+
+        // 渲染借阅记录
+        function renderBorrowedRecords() {
+            const borrowedBooks = StorageManager.getBorrowedBooks();
+            
+            // 更新统计信息
+            totalCount.textContent = borrowedBooks.length;
+            
+            const borrowed = borrowedBooks.filter(record => !record.returned);
+            const returned = borrowedBooks.filter(record => record.returned);
+            
+            borrowedCount.textContent = borrowed.length;
+            returnedCount.textContent = returned.length;
+            
+            // 清空列表
+            borrowedList.innerHTML = '';
+            
+            if (borrowedBooks.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // 按时间倒序排列
+            borrowedBooks.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
+            
+            // 渲染记录
+            borrowedBooks.forEach(record => {
+                const recordElement = document.createElement('div');
+                recordElement.className = 'bg-white rounded-lg p-4 card-shadow';
+                
+                // 计算是否逾期
+                const today = new Date();
+                const dueDate = new Date(record.dueDate);
+                const isOverdue = !record.returned && dueDate < today;
+                
+                recordElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-bold mb-1">${record.bookTitle}</h3>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p><i class="far fa-calendar-alt mr-2"></i>借阅日期: ${record.borrowDate}</p>
+                                <p><i class="far fa-calendar-check mr-2"></i>应还日期: ${record.dueDate}</p>
+                                ${
+                                    record.returned 
+                                    ? `<p class="text-green-500"><i class="fas fa-check-circle mr-2"></i>已归还</p>` 
+                                    : isOverdue 
+                                        ? `<p class="text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>已逾期</p>`
+                                        : `<p class="text-yellow-500"><i class="fas fa-clock mr-2"></i>借阅中</p>`
+                                }
+                            </div>
+                        </div>
+                        ${
+                            record.returned 
+                            ? '' 
+                            : `<button class="return-btn bg-primary text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap ml-2" 
+                                   data-id="${record.bookId}">
+                                归还
+                              </button>`
+                        }
+                    </div>
+                `;
+                
+                borrowedList.appendChild(recordElement);
+                
+                // 添加归还按钮事件
+                if (!record.returned) {
+                    const returnBtn = recordElement.querySelector('.return-btn');
+                    returnBtn.addEventListener('click', function() {
+                        handleReturn(record);
+                    });
+                }
+            });
+        }
+
+        // 处理归还
+        function handleReturn(record) {
+            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
+                GlobalModalManager.show(`确定要归还《${record.bookTitle}》吗？`, () => {
+                    // 更新借阅记录
+                    const borrowedBooks = StorageManager.getBorrowedBooks();
+                    const index = borrowedBooks.findIndex(item => 
+                        item.bookId === record.bookId && 
+                        item.borrowDate === record.borrowDate &&
+                        !item.returned
+                    );
+                    
+                    if (index !== -1) {
+                        borrowedBooks[index].returned = true;
+                        StorageManager.saveBorrowedBooks(borrowedBooks);
+                        
+                        // 重新渲染
+                        renderBorrowedRecords();
+                        
+                        if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                            GlobalModalManager.message(`《${record.bookTitle}》归还成功！`);
+                        } else {
+                            alert(`《${record.bookTitle}》归还成功！`);
+                        }
+                    }
+                });
+            } else {
+                if (confirm(`确定要归还《${record.bookTitle}》吗？`)) {
+                    // 更新借阅记录
+                    const borrowedBooks = StorageManager.getBorrowedBooks();
+                    const index = borrowedBooks.findIndex(item => 
+                        item.bookId === record.bookId && 
+                        item.borrowDate === record.borrowDate &&
+                        !item.returned
+                    );
+                    
+                    if (index !== -1) {
+                        borrowedBooks[index].returned = true;
+                        StorageManager.saveBorrowedBooks(borrowedBooks);
+                        
+                        // 重新渲染
+                        renderBorrowedRecords();
+                        
+                        alert(`《${record.bookTitle}》归还成功！`);
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

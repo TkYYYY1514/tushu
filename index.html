@@ -7,7 +7,6 @@
     <meta name="theme-color" content="#34D399">
     
     <!-- 性能优化 -->
-    <meta http-equiv="refresh" content="0;url=login.html">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +15,10 @@
     <title>雀语图书馆自助借还系统</title>
     <meta name="description" content="雀语图书馆自助借还系统 - 便捷的图书管理解决方案">
     <meta name="keywords" content="图书馆,自助借还,图书管理,移动应用">
+    
+    <!-- 引入必要的外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     
     <!-- 样式优化 -->
     <style>
@@ -120,15 +123,31 @@
         <h1>雀语图书馆自助借还系统</h1>
         <p>正在为您准备系统，请稍候...</p>
         <a href="login.html" aria-label="进入登录页面">立即进入系统</a>
+        <noscript>
+            <p class="text-red-500 mt-4">请启用JavaScript以获得最佳体验</p>
+        </noscript>
         <div class="loading">
             <div class="spinner"></div>
         </div>
     </div>
     
+    <!-- 弹窗容器 -->
+    <div id="modalContainer"></div>
+    
     <!-- 增强用户体验的脚本 -->
     <script>
         // 确保页面已完全加载
         document.addEventListener('DOMContentLoaded', function() {
+            // 加载弹窗组件
+            fetch('components/modal.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('加载弹窗组件失败:', error);
+                });
+            
             // 如果重定向失败，提供备用机制
             setTimeout(function() {
                 if (window.location.pathname !== '/login.html' && !window.location.href.includes('login.html')) {

@@ -87,11 +87,13 @@
         }
     </style>
 </head>
+
 <body class='bg-light min-h-screen flex flex-col'>
     <!-- 引入存储管理模块 -->
     <script src='utils/storage.js'></script>
     <!-- 主容器 -->
     <div class='flex-1 flex flex-col items-center justify-center px-6 py-12'>
+
         <!-- Logo和标题区域 -->
         <div class='mb-10 text-center opacity-0 animate-slide-up' style='animation-delay: 0.3s;'>
             <div class='relative w-28 h-28 mx-auto mb-6 bg-gradient-green rounded-xl shadow-lg flex items-center justify-center'>
@@ -206,9 +208,32 @@
     <div class='py-6 text-center text-gray-500 text-xs'>
         <p>© 2025 雀语图书馆 版权所有</p>
     </div>
+    
+    <!-- 弹窗容器 -->
+    <div id="modalContainer"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // 加载弹窗组件
+            fetch('components/modal.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('加载弹窗组件失败:', error);
+                });
+            
+            // 确保StorageManager可用
+            if (typeof StorageManager === 'undefined') {
+                console.error('StorageManager未定义');
+                // 创建一个基本的StorageManager对象
+                window.StorageManager = {
+                    getUserInfo: function() { return null; },
+                    saveUserInfo: function() { return false; },
+                    isLoggedIn: function() { return false; }
+                };
+            }
             // 显示/隐藏密码
             const togglePassword = document.getElementById('togglePassword');
             const password = document.getElementById('password');
@@ -227,19 +252,28 @@
         const loginForm = document.getElementById('loginForm');
         const rememberMe = document.getElementById('rememberMe');
         
+        // 显示消息提示
         function showToast(message, type = 'success') {
-            // 简单的Toast实现
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} transition-opacity duration-300`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
+            // 使用全局弹窗系统
+            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                GlobalModalManager.message(message);
+            } else {
+                // 备用方案：简单的Toast实现
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} transition-opacity duration-300`;
+                toast.textContent = message;
+                toast.style.zIndex = '9999';
+                document.body.appendChild(toast);
+                
                 setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 2000);
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            document.body.removeChild(toast);
+                        }
+                    }, 300);
+                }, 2000);
+            }
         }
         
         function validateForm() {
@@ -274,10 +308,24 @@
             // 使用存储管理器验证用户
             const storedUserInfo = StorageManager ? StorageManager.getUserInfo() : null;
             
-            if (storedUserInfo && storedUserInfo.account === account && storedUserInfo.password === password) {
+            // 测试账号：test123 / test123
+            if ((storedUserInfo && storedUserInfo.account === account && storedUserInfo.password === password) || 
+                (account === 'test123' && password === 'test123')) {
+                
                 // 登录成功，更新登录状态
                 if (StorageManager) {
-                    StorageManager.saveUserInfo(storedUserInfo);
+                    // 如果是测试账号，保存用户信息
+                    if (account === 'test123' && password === 'test123') {
+                        StorageManager.saveUserInfo({
+                            account: 'test123',
+                            password: 'test123',
+                            username: '测试用户',
+                            avatar: '',
+                            email: 'test@example.com'
+                        });
+                    } else {
+                        StorageManager.saveUserInfo(storedUserInfo);
+                    }
                 }
                 
                 // 显示成功提示

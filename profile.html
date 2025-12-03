@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 雀语图书馆</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#34D399',
+                        secondary: '#10B981',
+                        accent: '#059669',
+                        light: '#ECFDF5',
+                        dark: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .card-shadow {
+                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
+            }
+            .btn-hover {
+                @apply hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col pb-16">
+    <!-- 引入存储管理模块 -->
+    <script src="utils/storage.js"></script>
+    <!-- 弹窗组件会通过fetch动态加载 -->
+    
+    <!-- 顶部导航栏 -->
+    <header class="bg-white sticky top-0 z-10 card-shadow">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-user text-primary text-xl"></i>
+                <h1 class="text-lg font-bold text-dark">个人中心</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="settingsBtn" class="text-gray-600 hover:text-primary">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="flex-1 container mx-auto px-4 py-4">
+        <!-- 用户信息卡片 -->
+        <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+            <div class="flex items-center">
+                <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl mr-4">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold" id="userName">用户名</h2>
+                    <p class="text-gray-600" id="userAccount">学号/工号</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷功能 -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <a href="borrowed.html" class="bg-white rounded-lg p-4 card-shadow text-center btn-hover">
+                <i class="fas fa-bookmark text-primary text-2xl mb-2"></i>
+                <p class="text-sm">借阅记录</p>
+            </a>
+            <div class="bg-white rounded-lg p-4 card-shadow text-center btn-hover">
+                <i class="fas fa-history text-yellow-500 text-2xl mb-2"></i>
+                <p class="text-sm">阅读历史</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 card-shadow text-center btn-hover">
+                <!-- 占位符，可根据需要添加其他功能 -->
+            </div>
+        </div>
+
+        <!-- 功能菜单 -->
+        <div class="space-y-3">
+            <a href="#" class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between btn-hover">
+                <div class="flex items-center">
+                    <i class="fas fa-user-edit text-primary text-xl mr-3"></i>
+                    <span>个人信息</span>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="#" class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between btn-hover">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt text-green-500 text-xl mr-3"></i>
+                    <span>安全设置</span>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="#" class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between btn-hover">
+                <div class="flex items-center">
+                    <i class="fas fa-bell text-yellow-500 text-xl mr-3"></i>
+                    <span>消息通知</span>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="#" class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between btn-hover">
+                <div class="flex items-center">
+                    <i class="fas fa-question-circle text-blue-500 text-xl mr-3"></i>
+                    <span>帮助与反馈</span>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="#" class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between btn-hover">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-purple-500 text-xl mr-3"></i>
+                    <span>关于我们</span>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+        </div>
+
+        <!-- 退出登录按钮 -->
+        <div class="mt-8">
+            <button id="logoutBtn" class="w-full bg-white rounded-lg p-4 card-shadow text-red-500 font-medium btn-hover">
+                <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+            </button>
+        </div>
+    </main>
+
+    <!-- 弹窗组件容器 -->
+    <div id="modalContainer"></div>
+
+    <!-- 底部导航 -->
+    <footer class="bg-white fixed bottom-0 w-full border-t border-gray-200">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-3 gap-1">
+                <a href="books.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
+                    <i class="fas fa-home text-xl mb-1"></i>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="borrowed.html" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary">
+                    <i class="fas fa-bookmark text-xl mb-1"></i>
+                    <span class="text-xs">借阅</span>
+                </a>
+                <a href="profile.html" class="flex flex-col items-center py-2 text-primary">
+                    <i class="fas fa-user text-xl mb-1"></i>
+                    <span class="text-xs">我的</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM元素
+        const userName = document.getElementById('userName');
+        const userAccount = document.getElementById('userAccount');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+
+        // 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 检查登录状态
+    if (!StorageManager.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // 显示用户信息
+    const userInfo = StorageManager.getUserInfo();
+    if (userInfo) {
+        userName.textContent = userInfo.username || '未知用户';
+        userAccount.textContent = userInfo.account || '未知账号';
+    }
+
+    // 动态加载弹窗组件
+    fetch('components/modal.html')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('modalContainer').innerHTML = html;
+            // 绑定事件
+            bindEvents();
+        })
+        .catch(error => {
+            console.error('加载弹窗组件失败:', error);
+            // 即使弹窗组件加载失败，也要绑定事件
+            bindEvents();
+        });
+});
+
+        // 绑定事件
+        function bindEvents() {
+            // 退出登录
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
+                        GlobalModalManager.show('确定要退出登录吗？', function() {
+                            StorageManager.logout();
+                            window.location.href = 'login.html';
+                        });
+                    } else {
+                        if (confirm('确定要退出登录吗？')) {
+                            StorageManager.logout();
+                            window.location.href = 'login.html';
+                        }
+                    }
+                });
+            }
+
+            // 设置按钮
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                        GlobalModalManager.message('设置功能开发中...');
+                    } else {
+                        alert('设置功能开发中...');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
