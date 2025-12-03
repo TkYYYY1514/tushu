@@ -157,7 +157,7 @@
     <!-- 主要内容区域 -->
     <main class="flex-1 container mx-auto px-4 py-4">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold text-dark">热门推荐</h2>
+            <div></div>
             <div class="text-sm text-gray-500">共 <span id="bookCount">0</span> 本图书</div>
         </div>
 
@@ -211,8 +211,8 @@
     </div>
 
     <script>
-        // 图书数据
-        const booksData = [
+        // 图书数据 (存储在localStorage中以保持状态)
+        let booksData = [
             {
                 id: '1',
                 title: 'JavaScript高级程序设计',
@@ -402,11 +402,11 @@
                 isbn: '9787544291175',
                 category: '文学',
                 publisher: '人民文学出版社',
-                publishDate: '2018-03-01',
-                description: '本书是一部著名的儿童文学短篇小说，用浅显的语言写出了引人深思的哲理。',
+                publishDate: '2018-01-01',
+                description: '本书是法国作家安托万·德·圣-埃克苏佩里于1942年写成的著名儿童文学短篇小说。本书的主人公是来自外星球的小王子。书中以一位飞行员作为故事叙述者，讲述了小王子从自己星球出发前往地球的过程中，所经历的各种历险。',
                 coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
-                totalCopies: 18,
-                availableCopies: 13
+                totalCopies: 5,
+                availableCopies: 0
             },
             {
                 id: '16',
@@ -896,11 +896,10 @@
             // 添加滚动事件监听器
             window.addEventListener('scroll', handleScroll);
             
-            // 页面加载完成后检查逾期书籍
-            checkOverdueBooksAndNotify();
+
             
-            // 添加一些默认通知作为示例
-            addSampleNotifications();
+            // 检查是否有逾期书籍通知
+            checkOverdueBooksAndNotify();
         }
 
         // 处理滚动事件
@@ -1022,9 +1021,9 @@
                                 ${book.availableCopies > 0 ? `可借: ${book.availableCopies}` : '已借完'}
                             </span>
                             <div class="flex space-x-2">
-                                <button class="reserve-btn text-xs bg-gradient-to-r from-primary to-secondary text-white px-3 py-1.5 rounded-lg shadow-sm" 
-                                        data-id="${book.id}">
-                                    预约
+                                <button class="reserve-btn text-xs ${book.availableCopies > 0 ? 'bg-gradient-to-r from-primary to-secondary text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} px-3 py-1.5 rounded-lg shadow-sm" 
+                                        data-id="${book.id}" ${book.availableCopies > 0 ? '' : 'disabled'}>
+                                    ${book.availableCopies > 0 ? '预约' : '无库存'}
                                 </button>
                                 <button class="favorite-btn text-xs bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg shadow-sm" 
                                         data-id="${book.id}">
@@ -1100,9 +1099,9 @@
                             </p>
                         </div>
                         <div class="flex space-x-3">
-                            <button class="reserve-btn flex-1 bg-gradient-to-r from-primary to-secondary text-white py-3.5 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300" 
-                                    data-id="${book.id}">
-                                预约图书
+                            <button class="reserve-btn flex-1 ${book.availableCopies > 0 ? 'bg-gradient-to-r from-primary to-secondary text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} py-3.5 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300" 
+                                    data-id="${book.id}" ${book.availableCopies > 0 ? '' : 'disabled'}>
+                                ${book.availableCopies > 0 ? '预约图书' : '暂无库存'}
                             </button>
                             <button class="favorite-btn w-12 bg-gray-200 text-gray-700 py-3.5 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300" 
                                     data-id="${book.id}">
@@ -1173,6 +1172,12 @@
                 return;
             }
             
+            // 检查图书是否有库存
+            if (book.availableCopies <= 0) {
+                showMessageCard('该图书暂无库存，无法预约', 'error');
+                return;
+            }
+            
             // 确认预约
             showMessageCardWithConfirm(`确定要预约《${book.title}》吗？`, 'info', () => {
                 // 创建预约记录
@@ -1185,6 +1190,12 @@
                 
                 reservations.push(reservationRecord);
                 StorageManager.saveReservations(reservations);
+                
+                // 减少图书库存数量
+                book.availableCopies -= 1;
+                
+                // 保存更新后的图书数据到localStorage
+                localStorage.setItem('library_books_data', JSON.stringify(booksData));
                 
                 // 关闭模态框并提示
                 bookModal.classList.add('hidden');
