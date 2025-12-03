@@ -62,6 +62,28 @@ const StorageManager = {
         }
     },
 
+    // 保存预约记录
+    saveReservations: function(reservations) {
+        try {
+            localStorage.setItem('library_reservations', JSON.stringify(reservations));
+            return true;
+        } catch (error) {
+            console.error('保存预约记录失败:', error);
+            return false;
+        }
+    },
+
+    // 获取预约记录
+    getReservations: function() {
+        try {
+            const reservations = localStorage.getItem('library_reservations');
+            return reservations ? JSON.parse(reservations) : [];
+        } catch (error) {
+            console.error('获取预约记录失败:', error);
+            return [];
+        }
+    },
+
     // 保存收藏记录
     saveFavoriteBooks: function(books) {
         try {
@@ -97,6 +119,44 @@ const StorageManager = {
         // 如果还没有用户信息，创建默认用户
         if (!this.getUserInfo()) {
             this.saveUserInfo(defaultUser);
+        }
+        
+        // 初始化一些默认的借阅记录用于演示逾期功能
+        const borrowedBooks = this.getBorrowedBooks();
+        if (borrowedBooks.length === 0) {
+            // 添加一些测试数据，包括逾期的记录
+            const testData = [
+                {
+                    bookId: '1',
+                    bookTitle: 'JavaScript高级程序设计',
+                    borrowDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 40天前
+                    dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 10天前到期
+                    returned: false
+                },
+                {
+                    bookId: '2',
+                    bookTitle: '深入理解计算机系统',
+                    borrowDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 15天前
+                    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 15天后到期
+                    returned: false
+                },
+                {
+                    bookId: '3',
+                    bookTitle: '百年孤独',
+                    borrowDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 25天前
+                    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5天前到期
+                    returned: false
+                },
+                {
+                    bookId: '4',
+                    bookTitle: '人类简史',
+                    borrowDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 20天前
+                    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2天前到期
+                    returned: true // 已归还
+                }
+            ];
+            
+            this.saveBorrowedBooks(testData);
         }
     }
 };

@@ -71,7 +71,7 @@
     <!-- 主要内容区域 -->
     <main class="flex-1 container mx-auto px-4 py-4">
         <!-- 统计信息 -->
-        <div class="grid grid-cols-3 gap-3 mb-4">
+        <div class="grid grid-cols-4 gap-3 mb-4">
             <div class="bg-white rounded-lg p-3 card-shadow text-center">
                 <div class="text-2xl font-bold text-primary" id="totalCount">0</div>
                 <div class="text-xs text-gray-500">总计</div>
@@ -84,17 +84,29 @@
                 <div class="text-2xl font-bold text-green-500" id="returnedCount">0</div>
                 <div class="text-xs text-gray-500">已归还</div>
             </div>
+            <div class="bg-white rounded-lg p-3 card-shadow text-center">
+                <div class="text-2xl font-bold text-purple-500" id="favoriteCount">0</div>
+                <div class="text-xs text-gray-500">我的收藏</div>
+            </div>
         </div>
 
-        <!-- 借阅记录列表 -->
-        <div id="borrowedList" class="space-y-3">
+        <!-- 分类标签 -->
+        <div class="flex border-b border-gray-200 mb-4">
+            <button class="tab-btn py-2 px-4 font-medium text-primary border-b-2 border-primary" data-tab="all">全部</button>
+            <button class="tab-btn py-2 px-4 font-medium text-gray-500" data-tab="reservations">预约记录</button>
+            <button class="tab-btn py-2 px-4 font-medium text-gray-500" data-tab="borrowed">借阅记录</button>
+            <button class="tab-btn py-2 px-4 font-medium text-gray-500" data-tab="favorites">我的收藏</button>
+        </div>
+
+        <!-- 记录列表 -->
+        <div id="recordsContainer">
             <!-- 记录将通过JavaScript动态生成 -->
         </div>
 
         <!-- 空状态 -->
         <div id="emptyState" class="hidden py-12 text-center">
             <i class="fas fa-book-open text-4xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500">暂无借阅记录</p>
+            <p class="text-gray-500">暂无记录</p>
         </div>
     </main>
 
@@ -125,12 +137,16 @@
 
     <script>
         // DOM元素
-        const borrowedList = document.getElementById('borrowedList');
+        const recordsContainer = document.getElementById('recordsContainer');
         const emptyState = document.getElementById('emptyState');
         const totalCount = document.getElementById('totalCount');
         const borrowedCount = document.getElementById('borrowedCount');
         const returnedCount = document.getElementById('returnedCount');
         const refreshBtn = document.getElementById('refreshBtn');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+
+        // 当前选中的标签
+        let currentTab = 'all';
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
@@ -145,8 +161,8 @@
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('modalContainer').innerHTML = html;
-                    // 渲染借阅记录
-                    renderBorrowedRecords();
+                    // 渲染记录
+                    renderRecords();
 
                     // 绑定事件
                     bindEvents();
@@ -154,7 +170,7 @@
                 .catch(error => {
                     console.error('加载弹窗组件失败:', error);
                     // 即使弹窗组件加载失败，也要初始化页面
-                    renderBorrowedRecords();
+                    renderRecords();
                     bindEvents();
                 });
         });
@@ -163,16 +179,37 @@
         function bindEvents() {
             // 刷新按钮
             refreshBtn.addEventListener('click', function() {
-                renderBorrowedRecords();
+                renderRecords();
+            });
+            
+            // 标签切换
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 更新标签状态
+                    tabBtns.forEach(b => {
+                        b.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                        b.classList.add('text-gray-500');
+                    });
+                    this.classList.remove('text-gray-500');
+                    this.classList.add('text-primary', 'border-b-2', 'border-primary');
+                    
+                    // 切换显示内容
+                    currentTab = this.dataset.tab;
+                    renderRecords();
+                });
             });
         }
 
-        // 渲染借阅记录
-        function renderBorrowedRecords() {
+        // 渲染记录
+        function renderRecords() {
             const borrowedBooks = StorageManager.getBorrowedBooks();
+            const reservations = StorageManager.getReservations();
+            const favorites = StorageManager.getFavoriteBooks();
             
             // 更新统计信息
-            totalCount.textContent = borrowedBooks.length;
+            // 总数应该是借阅记录和预约记录的总和（不包括收藏）
+            totalCount.textContent = borrowedBooks.length + reservations.length;
+            favoriteCount.textContent = favorites.length;
             
             const borrowed = borrowedBooks.filter(record => !record.returned);
             const returned = borrowedBooks.filter(record => record.returned);
@@ -181,9 +218,9 @@
             returnedCount.textContent = returned.length;
             
             // 清空列表
-            borrowedList.innerHTML = '';
+            recordsContainer.innerHTML = '';
             
-            if (borrowedBooks.length === 0) {
+            if (borrowedBooks.length === 0 && reservations.length === 0 && favorites.length === 0) {
                 emptyState.classList.remove('hidden');
                 return;
             }
@@ -192,16 +229,99 @@
             
             // 按时间倒序排列
             borrowedBooks.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
+            reservations.sort((a, b) => new Date(b.reserveDate) - new Date(a.reserveDate));
             
-            // 渲染记录
+            // 根据标签显示不同内容
+            switch(currentTab) {
+                case 'all':
+                    renderAllRecords(reservations, borrowedBooks, favorites);
+                    break;
+                case 'reservations':
+                    renderReservations(reservations);
+                    break;
+                case 'borrowed':
+                    renderBorrowedBooks(borrowedBooks);
+                    break;
+                case 'favorites':
+                    renderFavorites(favorites);
+                    break;
+            }
+        }
+        
+        // 渲染所有记录
+        function renderAllRecords(reservations, borrowedBooks, favorites) {
+            // 创建预约记录标题
+            if (reservations.some(r => !r.completed)) {
+                const reservationHeader = document.createElement('h2');
+                reservationHeader.className = 'text-lg font-bold mb-3 mt-4';
+                reservationHeader.textContent = '预约记录';
+                recordsContainer.appendChild(reservationHeader);
+            }
+            
+            // 渲染预约记录
+            let hasReservations = false;
+            reservations.forEach(record => {
+                if (!record.completed) {
+                    hasReservations = true;
+                    const recordElement = document.createElement('div');
+                    recordElement.className = 'bg-white rounded-lg p-4 card-shadow mb-3';
+                    recordElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-bold mb-1">${record.bookTitle}</h3>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <p><i class="far fa-calendar-alt mr-2"></i>预约日期: ${record.reserveDate}</p>
+                                    <p class="text-blue-500"><i class="fas fa-clock mr-2"></i>待借阅</p>
+                                </div>
+                            </div>
+                            <button class="cancel-reserve-btn bg-red-500 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap ml-2" 
+                               data-id="${record.bookId}">
+                                取消预约
+                            </button>
+                        </div>
+                    `;
+                    recordsContainer.appendChild(recordElement);
+                    
+                    // 添加取消预约按钮事件
+                    const cancelBtn = recordElement.querySelector('.cancel-reserve-btn');
+                    cancelBtn.addEventListener('click', function() {
+                        handleCancelReservation(record);
+                    });
+                }
+            });
+            
+            // 如果有预约记录，添加分割线
+            if (hasReservations && (borrowedBooks.length > 0 || favorites.length > 0)) {
+                const divider = document.createElement('hr');
+                divider.className = 'my-4 border-gray-200';
+                recordsContainer.appendChild(divider);
+            }
+            
+            // 创建借阅记录标题
+            if (borrowedBooks.length > 0) {
+                const borrowedHeader = document.createElement('h2');
+                borrowedHeader.className = 'text-lg font-bold mb-3';
+                borrowedHeader.textContent = '借阅记录';
+                recordsContainer.appendChild(borrowedHeader);
+            }
+            
+            // 渲染借阅记录
             borrowedBooks.forEach(record => {
                 const recordElement = document.createElement('div');
-                recordElement.className = 'bg-white rounded-lg p-4 card-shadow';
+                recordElement.className = 'bg-white rounded-lg p-4 card-shadow mb-3';
                 
                 // 计算是否逾期
                 const today = new Date();
                 const dueDate = new Date(record.dueDate);
                 const isOverdue = !record.returned && dueDate < today;
+                
+                // 计算逾期天数和罚款
+                let overdueDays = 0;
+                let fine = 0;
+                if (isOverdue) {
+                    overdueDays = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+                    fine = overdueDays * 0.5; // 每天0.5元罚款
+                }
                 
                 recordElement.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -210,12 +330,13 @@
                             <div class="text-sm text-gray-600 space-y-1">
                                 <p><i class="far fa-calendar-alt mr-2"></i>借阅日期: ${record.borrowDate}</p>
                                 <p><i class="far fa-calendar-check mr-2"></i>应还日期: ${record.dueDate}</p>
+                                ${isOverdue ? `<p class="text-red-500 font-bold"><i class="fas fa-exclamation-circle mr-2"></i>已逾期 ${overdueDays} 天，罚款: ¥${fine.toFixed(2)}</p>` : ''}
                                 ${
                                     record.returned 
                                     ? `<p class="text-green-500"><i class="fas fa-check-circle mr-2"></i>已归还</p>` 
-                                    : isOverdue 
-                                        ? `<p class="text-red-500"><i class="fas fa-exclamation-circle mr-2"></i>已逾期</p>`
-                                        : `<p class="text-yellow-500"><i class="fas fa-clock mr-2"></i>借阅中</p>`
+                                    : !isOverdue 
+                                        ? `<p class="text-yellow-500"><i class="fas fa-clock mr-2"></i>借阅中</p>`
+                                        : ''
                                 }
                             </div>
                         </div>
@@ -230,7 +351,505 @@
                     </div>
                 `;
                 
-                borrowedList.appendChild(recordElement);
+                recordsContainer.appendChild(recordElement);
+                
+                // 添加归还按钮事件
+                if (!record.returned) {
+                    const returnBtn = recordElement.querySelector('.return-btn');
+                    returnBtn.addEventListener('click', function() {
+                        handleReturn(record);
+                    });
+                }
+            });
+            
+            // 如果有借阅记录且有收藏记录，添加分割线
+            if ((hasReservations || borrowedBooks.length > 0) && favorites.length > 0) {
+                const divider = document.createElement('hr');
+                divider.className = 'my-4 border-gray-200';
+                recordsContainer.appendChild(divider);
+            }
+            
+            // 创建收藏记录标题
+            if (favorites.length > 0) {
+                const favoritesHeader = document.createElement('h2');
+                favoritesHeader.className = 'text-lg font-bold mb-3';
+                favoritesHeader.textContent = '我的收藏';
+                recordsContainer.appendChild(favoritesHeader);
+                
+                // 渲染收藏记录
+                renderFavoriteBooks(favorites);
+            }
+        }
+        
+        // 只渲染收藏记录
+        function renderFavorites(favorites) {
+            if (favorites.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.querySelector('p').textContent = '暂无收藏记录';
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            renderFavoriteBooks(favorites);
+        }
+        
+        // 渲染收藏的图书
+        function renderFavoriteBooks(favorites) {
+            // 获取完整的图书数据
+            const booksData = [
+                {
+                    id: '1',
+                    title: 'JavaScript高级程序设计',
+                    author: 'Nicholas C. Zakas',
+                    isbn: '9787115275790',
+                    category: '科技',
+                    publisher: '人民邮电出版社',
+                    publishDate: '2012-03-01',
+                    description: '本书是JavaScript经典图书的新版，全面介绍了JavaScript的核心概念和实践技巧。',
+                    coverImage: 'https://images.unsplash.com/photo-1532016923179-5bf2a0b0d0f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 10,
+                    availableCopies: 5
+                },
+                {
+                    id: '2',
+                    title: '深入理解计算机系统',
+                    author: 'Randal E.Bryant',
+                    isbn: '9787111321330',
+                    category: '科技',
+                    publisher: '机械工业出版社',
+                    publishDate: '2016-11-01',
+                    description: '本书从程序员的角度详细阐述计算机系统的本质概念，并展示这些概念如何实实在在地影响应用程序的正确性、性能和实用性。',
+                    coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 8,
+                    availableCopies: 3
+                },
+                {
+                    id: '3',
+                    title: '百年孤独',
+                    author: '加西亚·马尔克斯',
+                    isbn: '9787544291170',
+                    category: '文学',
+                    publisher: '南海出版公司',
+                    publishDate: '2017-06-01',
+                    description: '《百年孤独》是魔幻现实主义文学的代表作，描写了布恩迪亚家族七代人的传奇故事。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 12,
+                    availableCopies: 7
+                },
+                {
+                    id: '4',
+                    title: '人类简史',
+                    author: '尤瓦尔·赫拉利',
+                    isbn: '9787508647357',
+                    category: '历史',
+                    publisher: '中信出版社',
+                    publishDate: '2014-11-01',
+                    description: '本书以全新视角审视人类历史，讲述了从智人演化到现代人类的过程，以及人类社会的发展轨迹。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 15,
+                    availableCopies: 9
+                },
+                {
+                    id: '5',
+                    title: '设计心理学',
+                    author: '唐纳德·诺曼',
+                    isbn: '9787508647358',
+                    category: '艺术',
+                    publisher: '中信出版社',
+                    publishDate: '2016-03-01',
+                    description: '本书解释了为什么我们的日常生活充满了困扰，以及设计师应该如何改善用户的体验。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 6,
+                    availableCopies: 2
+                },
+                {
+                    id: '6',
+                    title: '原则',
+                    author: '瑞·达利欧',
+                    isbn: '9787508681057',
+                    category: '教育',
+                    publisher: '中信出版社',
+                    publishDate: '2018-01-01',
+                    description: '桥水基金创始人分享其生活和工作的原则，帮助读者在面对人生和职业挑战时做出更好的决策。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 10,
+                    availableCopies: 6
+                }
+            ];
+            
+            // 过滤出收藏的图书
+            const favoriteBooks = booksData.filter(book => favorites.includes(book.id));
+            
+            if (favoriteBooks.length === 0) {
+                const noFavorites = document.createElement('div');
+                noFavorites.className = 'text-center py-8 text-gray-500';
+                noFavorites.textContent = '收藏的图书不存在或已被删除';
+                recordsContainer.appendChild(noFavorites);
+                return;
+            }
+            
+            // 创建收藏图书网格
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
+            
+            favoriteBooks.forEach(book => {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'bg-white rounded-xl card-shadow overflow-hidden btn-hover transform transition-transform duration-300 hover:-translate-y-1';
+                bookCard.innerHTML = `
+                    <div class="aspect-[2/3] overflow-hidden">
+                        <img src="${book.coverImage}" alt="${book.title}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80'">
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-semibold text-sm mb-1 line-clamp-2">${book.title}</h3>
+                        <p class="text-xs text-gray-500 mb-2 truncate">${book.author}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium ${book.availableCopies > 0 ? 'text-primary' : 'text-red-500'}">
+                                ${book.availableCopies > 0 ? `可借: ${book.availableCopies}` : '已借完'}
+                            </span>
+                            <div class="flex space-x-1">
+                                <button class="reserve-btn text-xs bg-gradient-to-r from-primary to-secondary text-white px-2 py-1 rounded" 
+                                        data-id="${book.id}">
+                                    预约
+                                </button>
+                                <button class="unfavorite-btn text-xs bg-red-500 text-white px-2 py-1 rounded" 
+                                        data-id="${book.id}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(bookCard);
+                
+                // 添加预约按钮事件
+                const reserveBtn = bookCard.querySelector('.reserve-btn');
+                reserveBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleReserveFromFavorites(book.id);
+                });
+                
+                // 添加取消收藏按钮事件
+                const unfavoriteBtn = bookCard.querySelector('.unfavorite-btn');
+                unfavoriteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleUnfavoriteFromFavorites(book.id);
+                });
+            });
+            
+            recordsContainer.appendChild(grid);
+        }
+        
+        // 从收藏中预约图书
+        function handleReserveFromFavorites(bookId) {
+            // 这里可以复用之前的预约逻辑
+            const booksData = [
+                {
+                    id: '1',
+                    title: 'JavaScript高级程序设计',
+                    author: 'Nicholas C. Zakas',
+                    isbn: '9787115275790',
+                    category: '科技',
+                    publisher: '人民邮电出版社',
+                    publishDate: '2012-03-01',
+                    description: '本书是JavaScript经典图书的新版，全面介绍了JavaScript的核心概念和实践技巧。',
+                    coverImage: 'https://images.unsplash.com/photo-1532016923179-5bf2a0b0d0f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 10,
+                    availableCopies: 5
+                },
+                {
+                    id: '2',
+                    title: '深入理解计算机系统',
+                    author: 'Randal E.Bryant',
+                    isbn: '9787111321330',
+                    category: '科技',
+                    publisher: '机械工业出版社',
+                    publishDate: '2016-11-01',
+                    description: '本书从程序员的角度详细阐述计算机系统的本质概念，并展示这些概念如何实实在在地影响应用程序的正确性、性能和实用性。',
+                    coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 8,
+                    availableCopies: 3
+                },
+                {
+                    id: '3',
+                    title: '百年孤独',
+                    author: '加西亚·马尔克斯',
+                    isbn: '9787544291170',
+                    category: '文学',
+                    publisher: '南海出版公司',
+                    publishDate: '2017-06-01',
+                    description: '《百年孤独》是魔幻现实主义文学的代表作，描写了布恩迪亚家族七代人的传奇故事。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 12,
+                    availableCopies: 7
+                },
+                {
+                    id: '4',
+                    title: '人类简史',
+                    author: '尤瓦尔·赫拉利',
+                    isbn: '9787508647357',
+                    category: '历史',
+                    publisher: '中信出版社',
+                    publishDate: '2014-11-01',
+                    description: '本书以全新视角审视人类历史，讲述了从智人演化到现代人类的过程，以及人类社会的发展轨迹。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 15,
+                    availableCopies: 9
+                },
+                {
+                    id: '5',
+                    title: '设计心理学',
+                    author: '唐纳德·诺曼',
+                    isbn: '9787508647358',
+                    category: '艺术',
+                    publisher: '中信出版社',
+                    publishDate: '2016-03-01',
+                    description: '本书解释了为什么我们的日常生活充满了困扰，以及设计师应该如何改善用户的体验。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 6,
+                    availableCopies: 2
+                },
+                {
+                    id: '6',
+                    title: '原则',
+                    author: '瑞·达利欧',
+                    isbn: '9787508681057',
+                    category: '教育',
+                    publisher: '中信出版社',
+                    publishDate: '2018-01-01',
+                    description: '桥水基金创始人分享其生活和工作的原则，帮助读者在面对人生和职业挑战时做出更好的决策。',
+                    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+                    totalCopies: 10,
+                    availableCopies: 6
+                }
+            ];
+            
+            const book = booksData.find(b => b.id === bookId);
+            if (!book) {
+                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                    GlobalModalManager.message('未找到该图书');
+                } else {
+                    alert('未找到该图书');
+                }
+                return;
+            }
+            
+            // 检查是否已经预约过这本书
+            const reservations = StorageManager.getReservations();
+            const existingReservation = reservations.find(r => r.bookId === bookId && !r.completed);
+            if (existingReservation) {
+                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                    GlobalModalManager.message('您已经预约过这本书，请前往图书馆办理借阅手续');
+                } else {
+                    alert('您已经预约过这本书，请前往图书馆办理借阅手续');
+                }
+                return;
+            }
+            
+            // 确认预约
+            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
+                GlobalModalManager.show(`确定要预约《${book.title}》吗？预约成功后请前往图书馆办理借阅手续。`, function() {
+                    // 创建预约记录
+                    const reservationRecord = {
+                        bookId: book.id,
+                        bookTitle: book.title,
+                        reserveDate: new Date().toISOString().split('T')[0],
+                        completed: false
+                    };
+                    
+                    reservations.push(reservationRecord);
+                    StorageManager.saveReservations(reservations);
+                    
+                    if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                        GlobalModalManager.message(`《${book.title}》预约成功！请前往图书馆办理借阅手续。`);
+                    } else {
+                        alert(`《${book.title}》预约成功！请前往图书馆办理借阅手续。`);
+                    }
+                    
+                    // 重新渲染
+                    renderRecords();
+                });
+            } else {
+                if (confirm(`确定要预约《${book.title}》吗？预约成功后请前往图书馆办理借阅手续。`)) {
+                    // 创建预约记录
+                    const reservationRecord = {
+                        bookId: book.id,
+                        bookTitle: book.title,
+                        reserveDate: new Date().toISOString().split('T')[0],
+                        completed: false
+                    };
+                    
+                    reservations.push(reservationRecord);
+                    StorageManager.saveReservations(reservations);
+                    
+                    alert(`《${book.title}》预约成功！请前往图书馆办理借阅手续。`);
+                    
+                    // 重新渲染
+                    renderRecords();
+                }
+            }
+        }
+        
+        // 从收藏中取消收藏图书
+        function handleUnfavoriteFromFavorites(bookId) {
+            const favorites = StorageManager.getFavoriteBooks();
+            const bookIndex = favorites.indexOf(bookId);
+            
+            if (bookIndex > -1) {
+                // 确认取消收藏
+                if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
+                    GlobalModalManager.show('确定要取消收藏这本书吗？', function() {
+                        favorites.splice(bookIndex, 1);
+                        StorageManager.saveFavoriteBooks(favorites);
+                        
+                        if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                            GlobalModalManager.message('已取消收藏');
+                        } else {
+                            alert('已取消收藏');
+                        }
+                        
+                        // 重新渲染
+                        renderRecords();
+                    });
+                } else {
+                    if (confirm('确定要取消收藏这本书吗？')) {
+                        favorites.splice(bookIndex, 1);
+                        StorageManager.saveFavoriteBooks(favorites);
+                        alert('已取消收藏');
+                        
+                        // 重新渲染
+                        renderRecords();
+                    }
+                }
+            }
+        }
+        
+        // 只渲染预约记录
+        function renderReservations(reservations) {
+            let hasRecords = false;
+            reservations.forEach(record => {
+                if (!record.completed) {
+                    hasRecords = true;
+                    const recordElement = document.createElement('div');
+                    recordElement.className = 'bg-white rounded-lg p-4 card-shadow mb-3';
+                    recordElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-bold mb-1">${record.bookTitle}</h3>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <p><i class="far fa-calendar-alt mr-2"></i>预约日期: ${record.reserveDate}</p>
+                                    <p class="text-blue-500"><i class="fas fa-clock mr-2"></i>待借阅</p>
+                                </div>
+                            </div>
+                            <button class="cancel-reserve-btn bg-red-500 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap ml-2" 
+                               data-id="${record.bookId}">
+                                取消预约
+                            </button>
+                        </div>
+                    `;
+                    recordsContainer.appendChild(recordElement);
+                    
+                    // 添加取消预约按钮事件
+                    const cancelBtn = recordElement.querySelector('.cancel-reserve-btn');
+                    cancelBtn.addEventListener('click', function() {
+                        handleCancelReservation(record);
+                    });
+                }
+            });
+            
+            if (!hasRecords) {
+                emptyState.classList.remove('hidden');
+                emptyState.querySelector('p').textContent = '暂无预约记录';
+            } else {
+                emptyState.classList.add('hidden');
+            }
+        }
+        
+        // 只渲染借阅记录
+        function renderBorrowedBooks(borrowedBooks) {
+            if (borrowedBooks.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.querySelector('p').textContent = '暂无借阅记录';
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // 按逾期状态排序，逾期的排在前面
+            borrowedBooks.sort((a, b) => {
+                const aDueDate = new Date(a.dueDate);
+                const bDueDate = new Date(b.dueDate);
+                const today = new Date();
+                
+                const aOverdue = !a.returned && aDueDate < today;
+                const bOverdue = !b.returned && bDueDate < today;
+                
+                // 两个都逾期或都不逾期，按日期排序
+                if (aOverdue === bOverdue) {
+                    return aDueDate - bDueDate;
+                }
+                
+                // 逾期的排在前面
+                return bOverdue - aOverdue;
+            });
+            
+            borrowedBooks.forEach(record => {
+                const recordElement = document.createElement('div');
+                recordElement.className = 'bg-white rounded-lg p-4 card-shadow mb-3';
+                
+                // 计算是否逾期
+                const today = new Date();
+                const dueDate = new Date(record.dueDate);
+                const isOverdue = !record.returned && dueDate < today;
+                
+                // 计算逾期天数和罚款
+                let overdueDays = 0;
+                let fine = 0;
+                if (isOverdue) {
+                    overdueDays = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+                    fine = overdueDays * 0.5; // 每天0.5元罚款
+                }
+                
+                // 根据状态设置边框颜色
+                if (isOverdue) {
+                    recordElement.classList.add('border-l-4', 'border-red-500');
+                } else if (!record.returned) {
+                    recordElement.classList.add('border-l-4', 'border-yellow-500');
+                } else {
+                    recordElement.classList.add('border-l-4', 'border-green-500');
+                }
+                
+                recordElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-bold mb-1">${record.bookTitle}</h3>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p><i class="far fa-calendar-alt mr-2"></i>借阅日期: ${record.borrowDate}</p>
+                                <p><i class="far fa-calendar-check mr-2"></i>应还日期: ${record.dueDate}</p>
+                                ${isOverdue ? `<p class="text-red-500 font-bold"><i class="fas fa-exclamation-circle mr-2"></i>已逾期 ${overdueDays} 天，罚款: ¥${fine.toFixed(2)}</p>` : ''}
+                                ${
+                                    record.returned 
+                                    ? `<p class="text-green-500"><i class="fas fa-check-circle mr-2"></i>已归还</p>` 
+                                    : !isOverdue 
+                                        ? `<p class="text-yellow-500"><i class="fas fa-clock mr-2"></i>借阅中</p>`
+                                        : ''
+                                }
+                            </div>
+                            ${isOverdue ? `<div class="mt-2 p-2 bg-red-50 rounded text-red-700 text-sm">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>请注意：图书已逾期，请尽快到图书馆归还并缴纳罚款。
+                            </div>` : ''}
+                        </div>
+                        ${
+                            record.returned 
+                            ? '' 
+                            : `<button class="return-btn bg-primary text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap ml-2" 
+                                   data-id="${record.bookId}">
+                                归还
+                              </button>`
+                        }
+                    </div>
+                `;
+                
+                recordsContainer.appendChild(recordElement);
                 
                 // 添加归还按钮事件
                 if (!record.returned) {
@@ -245,7 +864,7 @@
         // 处理归还
         function handleReturn(record) {
             if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
-                GlobalModalManager.show(`确定要归还《${record.bookTitle}》吗？`, () => {
+                GlobalModalManager.show(`确定要归还《${record.bookTitle}》吗？归还时请前往图书馆办理手续。`, () => {
                     // 更新借阅记录
                     const borrowedBooks = StorageManager.getBorrowedBooks();
                     const index = borrowedBooks.findIndex(item => 
@@ -259,17 +878,17 @@
                         StorageManager.saveBorrowedBooks(borrowedBooks);
                         
                         // 重新渲染
-                        renderBorrowedRecords();
+                        renderRecords();
                         
                         if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
-                            GlobalModalManager.message(`《${record.bookTitle}》归还成功！`);
+                            GlobalModalManager.message(`《${record.bookTitle}》归还成功！请前往图书馆办理归还手续。`);
                         } else {
-                            alert(`《${record.bookTitle}》归还成功！`);
+                            alert(`《${record.bookTitle}》归还成功！请前往图书馆办理归还手续。`);
                         }
                     }
                 });
             } else {
-                if (confirm(`确定要归还《${record.bookTitle}》吗？`)) {
+                if (confirm(`确定要归还《${record.bookTitle}》吗？归还时请前往图书馆办理手续。`)) {
                     // 更新借阅记录
                     const borrowedBooks = StorageManager.getBorrowedBooks();
                     const index = borrowedBooks.findIndex(item => 
@@ -283,9 +902,58 @@
                         StorageManager.saveBorrowedBooks(borrowedBooks);
                         
                         // 重新渲染
-                        renderBorrowedRecords();
+                        renderRecords();
                         
-                        alert(`《${record.bookTitle}》归还成功！`);
+                        alert(`《${record.bookTitle}》归还成功！请前往图书馆办理归还手续。`);
+                    }
+                }
+            }
+        }
+        
+        // 处理取消预约
+        function handleCancelReservation(record) {
+            if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.show) {
+                GlobalModalManager.show(`确定要取消预约《${record.bookTitle}》吗？`, () => {
+                    // 更新预约记录
+                    const reservations = StorageManager.getReservations();
+                    const index = reservations.findIndex(item => 
+                        item.bookId === record.bookId && 
+                        item.reserveDate === record.reserveDate &&
+                        !item.completed
+                    );
+                    
+                    if (index !== -1) {
+                        reservations[index].completed = true;
+                        StorageManager.saveReservations(reservations);
+                        
+                        // 重新渲染
+                        renderRecords();
+                        
+                        if (typeof GlobalModalManager !== 'undefined' && GlobalModalManager.message) {
+                            GlobalModalManager.message(`《${record.bookTitle}》预约已取消`);
+                        } else {
+                            alert(`《${record.bookTitle}》预约已取消`);
+                        }
+                    }
+                });
+            } else {
+                if (confirm(`确定要取消预约《${record.bookTitle}》吗？`)) {
+                    // 更新预约记录
+                    const reservations = StorageManager.getReservations();
+                    const index = reservations.findIndex(item => 
+                        item.bookId === record.bookId && 
+                        item.reserveDate === record.reserveDate &&
+                        !item.completed
+                    );
+                    
+                    if (index !== -1) {
+                        reservations[index].completed = true;
+                        StorageManager.saveReservations(reservations);
+                        
+                        // 重新渲染
+                        renderRecords();
+                        
+                        alert(`《${record.bookTitle}》预约已取消`);
                     }
                 }
             }
