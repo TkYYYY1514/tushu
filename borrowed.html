@@ -228,49 +228,34 @@
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查是否在SPA环境中运行
-            const isSPA = document.getElementById('appContent') !== null;
-            
-            // 如果不在SPA环境中，才执行原有的登录检查和初始化
-            if (!isSPA) {
-                // 检查登录状态
-                if (!StorageManager.isLoggedIn()) {
-                    window.location.href = 'login.html';
-                    return;
-                }
+            // 检查登录状态
+            if (!StorageManager.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
             }
 
-            // 显示加载指示器
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const contentArea = document.getElementById('contentArea');
-            
-            if (loadingIndicator && contentArea) {
-                loadingIndicator.classList.remove('hidden');
-                contentArea.classList.add('hidden');
-            }
+            // 动态加载弹窗组件
+            fetch('components/modal.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                    // 渲染所有记录
+                    renderAllRecords();
 
-            // 初始化统计信息
-            updateStats();
-            
-            // 显示所有分类
-            showAllCategories();
-
-            // 动态加载弹窗组件（如果不是在SPA环境中）
-            if (!isSPA) {
-                fetch('components/modal.html')
-                    .then(response => response.text())
-                    .then(html => {
-                        document.getElementById('modalContainer').innerHTML = html;
-                        bindEvents();
-                    })
-                    .catch(error => {
-                        console.error('加载弹窗组件失败:', error);
-                        bindEvents();
-                    });
-            } else {
-                // 在SPA环境中直接绑定事件
-                bindEvents();
-            }
+                    // 绑定事件
+                    bindEvents();
+                    
+                    // 默认显示全部分类
+                    showAllCategories();
+                })
+                .catch(error => {
+                    console.error('加载弹窗组件失败:', error);
+                    // 即使弹窗组件加载失败，也要初始化页面
+                    renderAllRecords();
+                    bindEvents();
+                    // 默认显示全部分类
+                    showAllCategories();
+                });
         });
         
         // 显示全部分类

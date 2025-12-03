@@ -1,192 +1,144 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!-- 基本元信息 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雀语图书馆</title>
+    <meta name="theme-color" content="#34D399">
+    
+    <!-- 性能优化 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- 文档信息 -->
+    <title>雀语图书馆自助借还系统</title>
+    <meta name="description" content="雀语图书馆自助借还系统 - 便捷的图书管理解决方案">
+    <meta name="keywords" content="图书馆,自助借还,图书管理,移动应用">
+    
+    <!-- 引入必要的外部资源 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#34D399',
-                        secondary: '#10B981',
-                        accent: '#059669',
-                        light: '#ECFDF5',
-                        dark: '#1E293B'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif']
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out forwards'
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
-                        }
-                    }
-                }
-            }
-        };
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .card-shadow {
-                box-shadow: 0 4px 6px -1px rgba(52, 211, 153, 0.1), 0 2px 4px -1px rgba(52, 211, 153, 0.06);
-            }
-            .btn-hover {
-                @apply hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200;
-            }
-            /* 消息卡片样式 */
-            .message-card {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1000;
-                max-width: 300px;
-                transform: translateX(120%);
-                transition: transform 0.3s ease-out;
-            }
-            .message-card.show {
-                transform: translateX(0);
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    
+    <!-- 样式优化 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 0.5s ease;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        h1 {
+            color: #34D399;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        p {
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        a {
+            display: inline-block;
+            background-color: #34D399;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        a:hover {
+            background-color: #10B981;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 211, 153, 0.3);
+        }
+        
+        .loading {
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(52, 211, 153, 0.3);
+            border-radius: 50%;
+            border-top-color: #34D399;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
             }
             
-            /* 页面过渡动画 */
-            .page-transition {
-                animation: fadeIn 0.3s ease-out forwards;
+            h1 {
+                font-size: 1.5rem;
             }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col pb-16">
-    <!-- 引入存储管理模块 -->
-    <script src="utils/storage.js"></script>
-    
-    <!-- 顶部导航栏 -->
-    <header class="bg-white sticky top-0 z-10 card-shadow">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-book text-primary text-xl"></i>
-                <h1 class="text-lg font-bold text-dark" id="pageTitle">雀语图书馆</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <button id="searchToggle" class="text-gray-600 hover:text-primary">
-                    <i class="fas fa-search"></i>
-                </button>
-                <div class="relative">
-                    <button id="notificationBtn" class="text-gray-600 hover:text-primary relative">
-                        <i class="fas fa-bell"></i>
-                        <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
-                    </button>
-                    <!-- 通知面板 -->
-                    <div id="notificationPanel" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-20 hidden">
-                        <div class="p-4 border-b border-gray-100">
-                            <h3 class="font-bold text-gray-800">通知消息</h3>
-                        </div>
-                        <div id="notificationList" class="max-h-96 overflow-y-auto">
-                            <!-- 通知将通过JavaScript动态生成 -->
-                        </div>
-                        <div class="p-4 border-t border-gray-100 text-center">
-                            <button id="clearNotifications" class="text-sm text-gray-500 hover:text-primary">清空所有通知</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="relative">
-                    <button id="userMenuBtn" class="flex items-center space-x-1 text-gray-600">
-                        <i class="fas fa-user-circle text-xl"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- 搜索区域 -->
-    <div id="searchContainer" class="bg-white px-4 py-3 border-b border-gray-100 hidden">
-        <div class="container mx-auto">
-            <div class="relative">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="搜索图书..." 
-                    class="w-full py-2 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none"
-                >
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-gray-400"></i>
-                </div>
-                <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 hidden">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+<body>
+    <div class="container">
+        <h1>雀语图书馆自助借还系统</h1>
+        <p>正在为您准备系统，请稍候...</p>
+        <a href="login.html" aria-label="进入登录页面">立即进入系统</a>
+        <noscript>
+            <p class="text-red-500 mt-4">请启用JavaScript以获得最佳体验</p>
+        </noscript>
+        <div class="loading">
+            <div class="spinner"></div>
         </div>
     </div>
-
-    <!-- 主要内容区域 -->
-    <main id="appContent" class="flex-1 container mx-auto px-4 py-4">
-        <!-- 页面内容将通过 AJAX 动态加载到这里 -->
-    </main>
-
-    <!-- 弹窗组件容器 -->
+    
+    <!-- 弹窗容器 -->
     <div id="modalContainer"></div>
     
-    <!-- 消息卡片容器 -->
-    <div id="messageCardContainer"></div>
-
-    <!-- 底部导航 -->
-    <footer class="bg-white fixed bottom-0 w-full border-t border-gray-200">
-        <div class="container mx-auto">
-            <div class="grid grid-cols-3 gap-1">
-                <a href="#" data-page="books" class="flex flex-col items-center py-2 text-primary nav-item">
-                    <i class="fas fa-home text-xl mb-1"></i>
-                    <span class="text-xs">首页</span>
-                </a>
-                <a href="#" data-page="borrowed" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary nav-item">
-                    <i class="fas fa-bookmark text-xl mb-1"></i>
-                    <span class="text-xs">借阅</span>
-                </a>
-                <a href="#" data-page="profile" class="flex flex-col items-center py-2 text-gray-500 hover:text-primary nav-item">
-                    <i class="fas fa-user text-xl mb-1"></i>
-                    <span class="text-xs">我的</span>
-                </a>
-            </div>
-        </div>
-    </footer>
-
+    <!-- 增强用户体验的脚本 -->
     <script>
-        // 当前页面状态
-        let currentPage = 'books';
-        let pageCache = {};
-
-        // DOM 元素
-        const appContent = document.getElementById('appContent');
-        const navItems = document.querySelectorAll('.nav-item');
-        const pageTitle = document.getElementById('pageTitle');
-
-        // 页面标题映射
-        const pageTitles = {
-            'books': '雀语图书馆',
-            'borrowed': '借阅记录',
-            'profile': '个人中心'
-        };
-
-        // 页面初始化
+        // 确保页面已完全加载
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查登录状态
-            if (!StorageManager.isLoggedIn()) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // 初始化导航事件
-            initNavigation();
-            
-            // 加载首页
-            loadPage('books');
-            
-            // 动态加载弹窗组件
+            // 加载弹窗组件
             fetch('components/modal.html')
                 .then(response => response.text())
                 .then(html => {
@@ -195,176 +147,29 @@
                 .catch(error => {
                     console.error('加载弹窗组件失败:', error);
                 });
-        });
-
-        // 初始化导航事件
-        function initNavigation() {
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.getAttribute('data-page');
-                    loadPage(page);
-                });
-            });
-        }
-
-        // 加载页面内容
-        function loadPage(page) {
-            // 更新当前页面状态
-            currentPage = page;
             
-            // 更新导航栏激活状态
-            updateNavActiveState(page);
-            
-            // 更新页面标题
-            pageTitle.textContent = pageTitles[page] || '雀语图书馆';
-            
-            // 检查缓存
-            if (pageCache[page]) {
-                appContent.innerHTML = pageCache[page];
-                appContent.classList.add('page-transition');
-                return;
-            }
-            
-            // 显示加载指示器
-            appContent.innerHTML = `
-                <div class="py-12 flex justify-center">
-                    <div class="text-center">
-                        <div class="inline-block relative w-12 h-12 mb-4">
-                            <div class="absolute w-12 h-12 border-4 border-primary/30 rounded-full animate-spin"></div>
-                            <div class="absolute w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                        <p class="text-gray-600">正在加载...</p>
-                    </div>
-                </div>
-            `;
-            
-            // 加载页面内容
-            fetch(`${page}.html`)
-                .then(response => response.text())
-                .then(html => {
-                    // 解析HTML并提取主要内容（去除头部和底部）
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    // 提取主要内容（去除script标签）
-                    const mainContent = doc.querySelector('main') || doc.body;
-                    const scripts = mainContent.querySelectorAll('script');
-                    scripts.forEach(script => script.remove());
-                    
-                    // 缓存页面内容
-                    pageCache[page] = mainContent.innerHTML;
-                    
-                    // 显示页面内容
-                    appContent.innerHTML = mainContent.innerHTML;
-                    appContent.classList.add('page-transition');
-                    
-                    // 执行页面内的脚本
-                    const pageScripts = doc.querySelectorAll('script');
-                    pageScripts.forEach(oldScript => {
-                        const newScript = document.createElement('script');
-                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                        appContent.appendChild(newScript);
-                    });
-                })
-                .catch(error => {
-                    console.error('加载页面失败:', error);
-                    appContent.innerHTML = `
-                        <div class="py-12 text-center">
-                            <i class="fas fa-exclamation-circle text-4xl text-red-500 mb-4"></i>
-                            <p class="text-gray-500">页面加载失败，请刷新重试</p>
-                        </div>
-                    `;
-                });
-        }
-
-        // 更新导航栏激活状态
-        function updateNavActiveState(activePage) {
-            navItems.forEach(item => {
-                const page = item.getAttribute('data-page');
-                if (page === activePage) {
-                    item.classList.remove('text-gray-500', 'hover:text-primary');
-                    item.classList.add('text-primary');
-                } else {
-                    item.classList.remove('text-primary');
-                    item.classList.add('text-gray-500', 'hover:text-primary');
+            // 如果重定向失败，提供备用机制
+            setTimeout(function() {
+                if (window.location.pathname !== '/login.html' && !window.location.href.includes('login.html')) {
+                    window.location.href = 'login.html';
                 }
-            });
-        }
-
-        // 显示消息卡片
-        function showMessageCard(message, type = 'info') {
-            // 创建消息卡片元素
-            const messageCard = document.createElement('div');
-            messageCard.className = 'message-card';
+            }, 2000);
             
-            // 根据消息类型设置样式
-            let icon = '';
-            let bgColor = '';
-            let textColor = '';
-            
-            switch(type) {
-                case 'success':
-                    icon = '<i class="fas fa-check-circle"></i>';
-                    bgColor = 'bg-green-500';
-                    textColor = 'text-white';
-                    break;
-                case 'error':
-                    icon = '<i class="fas fa-exclamation-circle"></i>';
-                    bgColor = 'bg-red-500';
-                    textColor = 'text-white';
-                    break;
-                case 'warning':
-                    icon = '<i class="fas fa-exclamation-triangle"></i>';
-                    bgColor = 'bg-yellow-500';
-                    textColor = 'text-white';
-                    break;
-                case 'info':
-                default:
-                    icon = '<i class="fas fa-info-circle"></i>';
-                    bgColor = 'bg-blue-500';
-                    textColor = 'text-white';
-                    break;
-            }
-            
-            messageCard.innerHTML = `
-                <div class="rounded-lg shadow-lg ${bgColor} ${textColor} p-4 flex items-start">
-                    <div class="mr-3 text-xl">${icon}</div>
-                    <div class="flex-1">${message}</div>
-                    <button class="ml-3 text-xl opacity-75 hover:opacity-100 focus:outline-none message-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            // 添加到消息容器
-            document.getElementById('messageCardContainer').appendChild(messageCard);
-            
-            // 显示动画
-            setTimeout(() => {
-                messageCard.classList.add('show');
-            }, 10);
-            
-            // 绑定关闭事件
-            const closeBtn = messageCard.querySelector('.message-close');
-            closeBtn.addEventListener('click', () => {
-                messageCard.classList.remove('show');
-                setTimeout(() => {
-                    messageCard.remove();
-                }, 300);
-            });
-            
-            // 3秒后自动消失
-            setTimeout(() => {
-                if (messageCard.parentNode) {
-                    messageCard.classList.remove('show');
-                    setTimeout(() => {
-                        messageCard.remove();
+            // 为跳转按钮添加增强功能
+            const redirectButton = document.querySelector('a[href="login.html"]');
+            if (redirectButton) {
+                redirectButton.addEventListener('click', function(e) {
+                    // 防止重复点击
+                    redirectButton.disabled = true;
+                    redirectButton.textContent = '正在跳转...';
+                    
+                    // 添加短暂延迟以显示状态变化
+                    setTimeout(function() {
+                        window.location.href = 'login.html';
                     }, 300);
-                }
-            }, 3000);
-        }
+                });
+            }
+        });
     </script>
 </body>
 </html>
